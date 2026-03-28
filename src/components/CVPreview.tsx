@@ -36,7 +36,7 @@ const CVPreview = () => {
         <div className="flex items-center justify-center gap-6">
           {p.profileImage && (
             <Wrap {...aProps(0.1)}>
-              <div className="w-20 h-20 rounded-full overflow-hidden ring-4 shrink-0" style={{ ringColor: accentColor + '40' }}>
+              <div className="w-20 h-20 rounded-full overflow-hidden ring-4 shrink-0" style={{ boxShadow: `0 0 0 4px ${accentColor}40` }}>
                 <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
               </div>
             </Wrap>
