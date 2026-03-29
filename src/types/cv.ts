@@ -25,6 +25,7 @@ export interface Education {
   grade: string;
   percentage: string;
   description: string;
+  current: boolean;
 }
 
 export interface Experience {
