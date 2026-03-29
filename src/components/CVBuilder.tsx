@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Palette, Home } from 'lucide-react';
 import PersonalInfoStep from '@/components/steps/PersonalInfoStep';
 import ExperienceStep from '@/components/steps/ExperienceStep';
 import EducationStep from '@/components/steps/EducationStep';
@@ -10,6 +10,7 @@ import SkillsStep from '@/components/steps/SkillsStep';
 import LanguagesStep from '@/components/steps/LanguagesStep';
 import SocialsStep from '@/components/steps/SocialsStep';
 import ExtrasStep from '@/components/steps/ExtrasStep';
+import DesignStep from '@/components/steps/DesignStep';
 import CVPreview from '@/components/CVPreview';
 import ExportPanel from '@/components/ExportPanel';
 
@@ -21,6 +22,7 @@ const steps = [
   { label: 'Languages', icon: Globe2, component: LanguagesStep },
   { label: 'Socials', icon: Link, component: SocialsStep },
   { label: 'Extras', icon: Star, component: ExtrasStep },
+  { label: 'Design', icon: Palette, component: DesignStep },
 ];
 
 const CVBuilder = () => {
@@ -72,6 +74,21 @@ const CVBuilder = () => {
       </header>
 
       <div className="container px-4 py-6">
+        {/* Step Progress Indicator */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground font-medium">Step {step + 1} of {steps.length}</span>
+            <span className="text-xs text-primary font-semibold">{steps[step].label}</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+            <motion.div
+              className="h-full rounded-full gradient-primary"
+              animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6">
           {/* Left: Form */}
           <div className={`space-y-4 ${showPreview ? 'hidden lg:block' : ''}`}>
@@ -84,6 +101,8 @@ const CVBuilder = () => {
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all btn-press ${
                     step === i
                       ? 'gradient-primary text-primary-foreground glow-primary-sm shadow-sm'
+                      : i < step
+                      ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:bg-secondary'
                   }`}
                 >
@@ -94,7 +113,7 @@ const CVBuilder = () => {
             </div>
 
             {/* Step Content - scrollable */}
-            <div className="glass-card-strong rounded-xl p-6 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin">
+            <div className="glass-card-strong rounded-xl p-6 max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin">
               <h2 className="font-heading font-bold text-xl mb-4 flex items-center gap-2">
                 {(() => { const Icon = steps[step].icon; return <Icon className="w-5 h-5 text-primary" />; })()}
                 {steps[step].label}

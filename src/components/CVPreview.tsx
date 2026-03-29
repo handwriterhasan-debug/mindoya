@@ -14,6 +14,12 @@ const CVPreview = () => {
 
   const accentColor = design.primaryColor || '#6C5CE7';
 
+  const fontFamily = design.fontStyle === 'classic'
+    ? "'Georgia', 'Times New Roman', serif"
+    : design.fontStyle === 'minimal'
+    ? "'Helvetica Neue', 'Arial', sans-serif"
+    : "'DM Sans', 'Plus Jakarta Sans', sans-serif";
+
   const hasContent = p.fullName || education.length || experience.length || skills.length;
 
   if (!hasContent) {
@@ -36,7 +42,7 @@ const CVPreview = () => {
   };
 
   return (
-    <div className="bg-card text-card-foreground p-8 max-w-[210mm] mx-auto shadow-xl rounded-lg" id="cv-output" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="bg-white text-gray-900 p-8 max-w-[210mm] mx-auto shadow-xl rounded-lg" id="cv-output" style={{ fontFamily }}>
       {/* Header */}
       <Wrap {...aProps(0)} className="text-center pb-6 mb-6" style={{ borderBottom: `2px solid ${accentColor}20` }}>
         <div className="flex items-center justify-center gap-5">
@@ -48,13 +54,13 @@ const CVPreview = () => {
             </Wrap>
           )}
           <div className="text-left">
-            <h1 className="text-3xl font-heading font-extrabold tracking-tight" style={{ color: accentColor }}>{p.fullName || 'Your Name'}</h1>
-            {p.jobTitle && <p className="text-base text-muted-foreground font-medium mt-1">{p.jobTitle}</p>}
+            <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: accentColor, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{p.fullName || 'Your Name'}</h1>
+            {p.jobTitle && <p className="text-base text-gray-500 font-medium mt-1">{p.jobTitle}</p>}
           </div>
         </div>
 
         {/* Contact Row */}
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-4 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-4 text-xs text-gray-500">
           {p.email && <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" style={{ color: accentColor }} />{p.email}</span>}
           {p.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" style={{ color: accentColor }} />{p.phone}</span>}
           {p.location && <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" style={{ color: accentColor }} />{p.location}</span>}
@@ -76,7 +82,7 @@ const CVPreview = () => {
       {/* Summary */}
       {p.summary && (
         <Wrap {...aProps(0.15)} className="mb-6">
-          <p className="text-sm leading-relaxed text-muted-foreground">{p.summary}</p>
+          <p className="text-sm leading-relaxed text-gray-600">{p.summary}</p>
         </Wrap>
       )}
 
@@ -88,14 +94,14 @@ const CVPreview = () => {
             {experience.map((exp, i) => (
               <Wrap key={exp.id} {...aProps(0.25 + i * 0.05)}>
                 <div className="relative">
-                  <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 bg-card" style={{ borderColor: accentColor }} />
-                  <h4 className="font-heading font-bold text-sm">{exp.position}</h4>
+                  <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 bg-white" style={{ borderColor: accentColor }} />
+                  <h4 className="font-bold text-sm text-gray-900">{exp.position}</h4>
                   <p className="text-sm font-medium" style={{ color: accentColor }}>{exp.company}</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                     <Calendar className="w-3 h-3" />
                     {formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}
                   </p>
-                  {exp.description && <p className="text-xs text-muted-foreground mt-2 leading-relaxed whitespace-pre-line">{exp.description}</p>}
+                  {exp.description && <p className="text-xs text-gray-600 mt-2 leading-relaxed whitespace-pre-line">{exp.description}</p>}
                 </div>
               </Wrap>
             ))}
@@ -111,16 +117,16 @@ const CVPreview = () => {
             {education.map((edu, i) => (
               <Wrap key={edu.id} {...aProps(0.35 + i * 0.05)}>
                 <div className="relative">
-                  <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 bg-card" style={{ borderColor: accentColor }} />
-                  <h4 className="font-heading font-bold text-sm">{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</h4>
+                  <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 bg-white" style={{ borderColor: accentColor }} />
+                  <h4 className="font-bold text-sm text-gray-900">{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</h4>
                   <p className="text-sm font-medium" style={{ color: accentColor }}>{edu.institution}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formatDate(edu.startDate)} — {(edu as any).current ? 'Present' : formatDate(edu.endDate)}
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}
                     {edu.gpa && ` · GPA: ${edu.gpa}`}
                     {edu.grade && ` · Grade: ${edu.grade}`}
                     {edu.percentage && ` · ${edu.percentage}`}
                   </p>
-                  {edu.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{edu.description}</p>}
+                  {edu.description && <p className="text-xs text-gray-600 mt-1 leading-relaxed">{edu.description}</p>}
                 </div>
               </Wrap>
             ))}
@@ -136,12 +142,12 @@ const CVPreview = () => {
             {skills.map((skill, i) => (
               <Wrap key={skill.id} {...aProps(0.42 + i * 0.03)}>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="font-medium">{skill.name}</span>
-                  <span className="text-muted-foreground">{skill.level}%</span>
+                  <span className="font-medium text-gray-900">{skill.name}</span>
+                  <span className="text-gray-400">{skill.level}%</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
                   <motion.div
-                    className={`h-full rounded-full`}
+                    className="h-full rounded-full"
                     style={{ backgroundColor: accentColor }}
                     initial={animated ? { width: 0 } : { width: `${skill.level}%` }}
                     animate={{ width: `${skill.level}%` }}
@@ -163,7 +169,7 @@ const CVPreview = () => {
               <Wrap key={lang.id} {...aProps(0.52 + i * 0.05)} className="flex items-center gap-3">
                 <div className="relative w-14 h-14">
                   <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--secondary))" strokeWidth="6" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#f0f0f0" strokeWidth="6" />
                     <motion.circle cx="50" cy="50" r="42" fill="none" stroke={accentColor} strokeWidth="6"
                       strokeDasharray="264"
                       initial={animated ? { strokeDashoffset: 264 } : { strokeDashoffset: 264 - (264 * lang.level / 100) }}
@@ -172,11 +178,11 @@ const CVPreview = () => {
                       strokeLinecap="round"
                     />
                   </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{lang.level}%</span>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-700">{lang.level}%</span>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">{lang.name}</p>
-                  <p className="text-xs text-muted-foreground">{lang.proficiency}</p>
+                  <p className="text-sm font-semibold text-gray-900">{lang.name}</p>
+                  <p className="text-xs text-gray-400">{lang.proficiency}</p>
                 </div>
               </Wrap>
             ))}
@@ -205,10 +211,10 @@ const CVPreview = () => {
               <div key={a.id} className="p-3 rounded-lg border" style={{ borderColor: accentColor + '20' }}>
                 <div className="flex items-center gap-2 mb-1">
                   <Trophy className="w-3.5 h-3.5" style={{ color: accentColor }} />
-                  <span className="font-heading font-bold text-xs">{a.title}</span>
+                  <span className="font-bold text-xs text-gray-900">{a.title}</span>
                 </div>
-                {a.description && <p className="text-xs text-muted-foreground">{a.description}</p>}
-                {a.date && <p className="text-xs text-muted-foreground mt-1">{formatDate(a.date)}</p>}
+                {a.description && <p className="text-xs text-gray-500">{a.description}</p>}
+                {a.date && <p className="text-xs text-gray-400 mt-1">{formatDate(a.date)}</p>}
               </div>
             ))}
           </div>
@@ -219,7 +225,7 @@ const CVPreview = () => {
       {customSections.filter(c => c.title).map((sec, i) => (
         <Wrap key={sec.id} {...aProps(0.7 + i * 0.05)} className="mb-6">
           <SectionTitle icon={PenLine} title={sec.title} color={accentColor} />
-          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{sec.content}</p>
+          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{sec.content}</p>
         </Wrap>
       ))}
     </div>
@@ -229,7 +235,7 @@ const CVPreview = () => {
 const SectionTitle = ({ icon: Icon, title, color }: { icon: any; title: string; color: string }) => (
   <div className="flex items-center gap-2 mb-3 pb-2 border-b" style={{ borderColor: color + '15' }}>
     <Icon className="w-4 h-4" style={{ color }} />
-    <h3 className="font-heading font-bold text-xs uppercase tracking-widest" style={{ color }}>{title}</h3>
+    <h3 className="font-bold text-xs uppercase tracking-widest" style={{ color }}>{title}</h3>
   </div>
 );
 

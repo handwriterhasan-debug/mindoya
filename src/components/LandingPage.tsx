@@ -22,7 +22,7 @@ const LandingPage = ({ onStart }: { onStart: (data?: OnboardingData) => void }) 
   };
 
   return (
-    <div className="min-h-screen mesh-gradient overflow-hidden">
+    <div className="min-h-screen mesh-gradient overflow-auto">
       {/* Nav */}
       <nav className="container flex items-center justify-between py-4 px-4">
         <h1 className="font-heading font-extrabold text-2xl gradient-text">Mindoya</h1>
@@ -142,7 +142,7 @@ const LandingPage = ({ onStart }: { onStart: (data?: OnboardingData) => void }) 
                     </a>
                   </Button>
                   <Button variant="outline" size="sm" className="btn-press" asChild>
-                    <a href="https://www.instagram.com/haxan_zai/?hl=en" target="_blank" rel="noopener noreferrer">
+                    <a href="https://www.hasancreates3d.com/en_GB" target="_blank" rel="noopener noreferrer">
                       <Globe className="w-4 h-4 mr-1" /> Website
                     </a>
                   </Button>
