@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,7 +15,7 @@ const EducationStep = () => {
 
   const add = () => {
     updateData('education', [...items, {
-      id: v4(), institution: '', degree: '', field: '', startDate: '', endDate: '', gpa: '', grade: '', percentage: '', description: ''
+      id: v4(), institution: '', degree: '', field: '', startDate: '', endDate: '', gpa: '', grade: '', percentage: '', description: '', current: false
     }]);
   };
 
@@ -51,7 +52,14 @@ const EducationStep = () => {
                 </Select>
               </div>
               <div><Label className="text-xs">Start Date</Label><Input type="month" value={edu.startDate} onChange={e => update(edu.id, 'startDate', e.target.value)} className="mt-1" /></div>
-              <div><Label className="text-xs">End Date</Label><Input type="month" value={edu.endDate} onChange={e => update(edu.id, 'endDate', e.target.value)} className="mt-1" /></div>
+              <div>
+                <Label className="text-xs">End Date</Label>
+                <Input type="month" value={edu.endDate} onChange={e => update(edu.id, 'endDate', e.target.value)} disabled={(edu as any).current} className="mt-1" />
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch checked={(edu as any).current || false} onCheckedChange={v => update(edu.id, 'current', v)} />
+                  <span className="text-xs text-muted-foreground">Currently studying here</span>
+                </div>
+              </div>
               <div><Label className="text-xs">GPA</Label><Input value={edu.gpa} onChange={e => update(edu.id, 'gpa', e.target.value)} placeholder="3.9/4.0" className="mt-1" /></div>
               <div><Label className="text-xs">Percentage</Label><Input value={edu.percentage} onChange={e => update(edu.id, 'percentage', e.target.value)} placeholder="95%" className="mt-1" /></div>
             </div>

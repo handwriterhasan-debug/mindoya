@@ -25,10 +25,27 @@ export const useCVContext = () => {
   return ctx;
 };
 
-export const CVProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface CVProviderProps {
+  children: React.ReactNode;
+  initialData?: { fullName?: string; age?: string; country?: string; email?: string } | null;
+}
+
+export const CVProvider: React.FC<CVProviderProps> = ({ children, initialData }) => {
   const [data, setData] = useState<CVData>(() => {
     const saved = localStorage.getItem('mindoya-cv');
-    return saved ? JSON.parse(saved) : defaultCVData;
+    const base = saved ? JSON.parse(saved) : defaultCVData;
+    if (initialData) {
+      return {
+        ...base,
+        personal: {
+          ...base.personal,
+          fullName: initialData.fullName || base.personal.fullName,
+          email: initialData.email || base.personal.email,
+          location: initialData.country || base.personal.location,
+        },
+      };
+    }
+    return base;
   });
   const [step, setStep] = useState(0);
   const [viewMode, setViewMode] = useState<'animated' | 'static'>('animated');
