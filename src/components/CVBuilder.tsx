@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import PersonalInfoStep from '@/components/steps/PersonalInfoStep';
 import ExperienceStep from '@/components/steps/ExperienceStep';
 import EducationStep from '@/components/steps/EducationStep';
@@ -34,7 +34,9 @@ const CVBuilder = () => {
       {/* Top Bar */}
       <header className="sticky top-0 z-50 glass-card-strong border-b">
         <div className="container flex items-center justify-between h-14 px-4">
-          <h1 className="font-heading font-bold text-lg gradient-text">Mindoya</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="font-heading font-bold text-lg gradient-text">Mindoya</h1>
+          </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={undo} disabled={!canUndo} className="btn-press" title="Undo">
               <Undo2 className="w-4 h-4" />
@@ -60,7 +62,7 @@ const CVBuilder = () => {
             </div>
 
             <Button variant="outline" size="sm" className="sm:hidden btn-press" onClick={() => setShowPreview(!showPreview)}>
-              <Eye className="w-4 h-4 mr-1" /> Preview
+              <Eye className="w-4 h-4 mr-1" /> {showPreview ? 'Edit' : 'Preview'}
             </Button>
             <Button size="sm" className="gradient-primary text-primary-foreground btn-press glow-primary-sm" onClick={() => setShowExport(true)}>
               Export
@@ -70,11 +72,11 @@ const CVBuilder = () => {
       </header>
 
       <div className="container px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6">
           {/* Left: Form */}
           <div className={`space-y-4 ${showPreview ? 'hidden lg:block' : ''}`}>
             {/* Step Navigator */}
-            <div className="glass-card rounded-xl p-2 flex gap-1 overflow-x-auto">
+            <div className="glass-card rounded-xl p-2 flex gap-1 overflow-x-auto scrollbar-hide">
               {steps.map((s, i) => (
                 <button
                   key={i}
@@ -91,8 +93,8 @@ const CVBuilder = () => {
               ))}
             </div>
 
-            {/* Step Content */}
-            <div className="glass-card-strong rounded-xl p-6 min-h-[400px]">
+            {/* Step Content - scrollable */}
+            <div className="glass-card-strong rounded-xl p-6 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin">
               <h2 className="font-heading font-bold text-xl mb-4 flex items-center gap-2">
                 {(() => { const Icon = steps[step].icon; return <Icon className="w-5 h-5 text-primary" />; })()}
                 {steps[step].label}
@@ -103,20 +105,26 @@ const CVBuilder = () => {
             </div>
 
             {/* Navigation */}
-            <div className="flex justify-between">
-              <Button variant="outline" disabled={step === 0} onClick={() => setStep(step - 1)} className="btn-press">
+            <div className="flex justify-between gap-3">
+              <Button variant="outline" disabled={step === 0} onClick={() => setStep(step - 1)} className="btn-press flex-1">
                 <ChevronLeft className="w-4 h-4 mr-1" /> Previous
               </Button>
-              <Button disabled={step === steps.length - 1} onClick={() => setStep(step + 1)} className="gradient-primary text-primary-foreground btn-press">
-                Next <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
+              {step === steps.length - 1 ? (
+                <Button onClick={() => setShowExport(true)} className="gradient-primary text-primary-foreground btn-press flex-1 glow-primary-sm">
+                  Finish & Export <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              ) : (
+                <Button onClick={() => setStep(step + 1)} className="gradient-primary text-primary-foreground btn-press flex-1">
+                  Next <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              )}
             </div>
           </div>
 
           {/* Right: Preview */}
           <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-20">
-              <div className="glass-card rounded-xl p-4 overflow-auto max-h-[calc(100vh-100px)]">
+              <div className="glass-card rounded-xl p-4 overflow-auto max-h-[calc(100vh-100px)] glow-preview">
                 <CVPreview />
               </div>
             </div>

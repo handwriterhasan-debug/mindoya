@@ -1,34 +1,28 @@
 import { useCVContext } from '@/context/CVContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Plus, Trash2, Globe2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 } from '@/lib/utils';
 
-const proficiencies = ['Beginner', 'Elementary', 'Intermediate', 'Upper Intermediate', 'Advanced', 'Native'];
-
 const LanguagesStep = () => {
   const { data, updateData } = useCVContext();
   const items = data.languages;
 
+  const getLevelFromValue = (level: number): string => {
+    if (level >= 80) return 'Professional';
+    if (level >= 40) return 'Intermediate';
+    return 'Beginner';
+  };
+
   const add = () => {
-    updateData('languages', [...items, { id: v4(), name: '', level: 60, proficiency: 'Intermediate' }]);
+    updateData('languages', [...items, { id: v4(), name: '', level: 60, proficiency: getLevelFromValue(60) }]);
   };
 
   const remove = (id: string) => updateData('languages', items.filter(l => l.id !== id));
   const update = (id: string, field: string, value: any) => {
     updateData('languages', items.map(l => l.id === id ? { ...l, [field]: value } : l));
-  };
-
-  const getLevelFromProficiency = (level: number): string => {
-    if (level >= 90) return 'Native';
-    if (level >= 75) return 'Advanced';
-    if (level >= 60) return 'Upper Intermediate';
-    if (level >= 45) return 'Intermediate';
-    if (level >= 25) return 'Elementary';
-    return 'Beginner';
   };
 
   return (
@@ -42,11 +36,32 @@ const LanguagesStep = () => {
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shrink-0">
                 <Globe2 className="w-4 h-4 text-primary-foreground" />
               </div>
-              <div className="flex-1 space-y-2">
-                <Input value={lang.name} onChange={e => update(lang.id, 'name', e.target.value)} placeholder="English, Spanish..." className="text-sm" />
+              <div className="flex-1 space-y-3">
+                <Input value={lang.name} onChange={e => update(lang.id, 'name', e.target.value)} placeholder="English, Spanish, Arabic..." className="text-sm" />
                 <div className="flex items-center gap-3">
-                  <Slider value={[lang.level]} onValueChange={([v]) => { update(lang.id, 'level', v); update(lang.id, 'proficiency', getLevelFromProficiency(v)); }} max={100} step={5} className="flex-1" />
-                  <span className="text-xs font-medium text-primary min-w-[100px] text-right">{getLevelFromProficiency(lang.level)}</span>
+                  <Slider
+                    value={[lang.level]}
+                    onValueChange={([v]) => {
+                      update(lang.id, 'level', v);
+                      update(lang.id, 'proficiency', getLevelFromValue(v));
+                    }}
+                    max={100}
+                    step={5}
+                    className="flex-1"
+                  />
+                  <div className="text-right min-w-[90px]">
+                    <span className="text-xs font-semibold text-primary">{lang.level}%</span>
+                    <span className="text-[10px] text-muted-foreground block">{getLevelFromValue(lang.level)}</span>
+                  </div>
+                </div>
+                {/* Visual progress bar */}
+                <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-primary"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${lang.level}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
                 </div>
               </div>
               <Button variant="ghost" size="icon" onClick={() => remove(lang.id)} className="text-destructive shrink-0"><Trash2 className="w-4 h-4" /></Button>

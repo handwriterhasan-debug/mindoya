@@ -5,13 +5,17 @@ import CVBuilder from '@/components/CVBuilder';
 
 const Index = () => {
   const [started, setStarted] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<any>(null);
 
   if (!started) {
-    return <LandingPage onStart={() => setStarted(true)} />;
+    return <LandingPage onStart={(data) => {
+      setOnboardingData(data);
+      setStarted(true);
+    }} />;
   }
 
   return (
-    <CVProvider>
+    <CVProvider initialData={onboardingData}>
       <CVBuilder />
     </CVProvider>
   );
