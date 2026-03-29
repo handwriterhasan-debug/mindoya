@@ -7,6 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { v4 } from '@/lib/utils';
 
+const getLevelLabel = (level: number) => {
+  if (level >= 70) return 'Professional';
+  if (level >= 40) return 'Intermediate';
+  return 'Beginner';
+};
+
 const SkillsStep = () => {
   const { data, updateData } = useCVContext();
   const items = data.skills;
@@ -18,12 +24,6 @@ const SkillsStep = () => {
   const remove = (id: string) => updateData('skills', items.filter(s => s.id !== id));
   const update = (id: string, field: string, value: any) => {
     updateData('skills', items.map(s => s.id === id ? { ...s, [field]: value } : s));
-  };
-
-  const getLevelLabel = (level: number) => {
-    if (level >= 80) return 'Professional';
-    if (level >= 40) return 'Intermediate';
-    return 'Beginner';
   };
 
   return (
