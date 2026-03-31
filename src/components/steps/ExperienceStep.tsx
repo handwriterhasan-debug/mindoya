@@ -1,7 +1,6 @@
 import { useCVContext } from '@/context/CVContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2, Briefcase } from 'lucide-react';
@@ -19,7 +18,6 @@ const ExperienceStep = () => {
   };
 
   const remove = (id: string) => updateData('experience', items.filter(e => e.id !== id));
-
   const update = (id: string, field: string, value: any) => {
     updateData('experience', items.map(e => e.id === id ? { ...e, [field]: value } : e));
   };
@@ -33,35 +31,35 @@ const ExperienceStep = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="glass-card rounded-xl p-5 space-y-4 hover-lift"
+            className="bg-[hsl(var(--ios-input-bg))] rounded-2xl p-4 space-y-3"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                  <Briefcase className="w-4 h-4 text-primary-foreground" />
+                <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+                  <Briefcase className="w-3.5 h-3.5 text-primary-foreground" />
                 </div>
                 <span className="font-heading font-semibold text-sm">Experience {i + 1}</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => remove(exp.id)} className="text-destructive hover:text-destructive">
+              <button onClick={() => remove(exp.id)} className="text-destructive p-1.5 rounded-lg hover:bg-destructive/10">
                 <Trash2 className="w-4 h-4" />
-              </Button>
+              </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Position</Label>
-                <Input value={exp.position} onChange={e => update(exp.id, 'position', e.target.value)} placeholder="Software Engineer" className="mt-1" />
+                <label className="ios-label">Position</label>
+                <Input value={exp.position} onChange={e => update(exp.id, 'position', e.target.value)} placeholder="Software Engineer" className="ios-input w-full" />
               </div>
               <div>
-                <Label className="text-xs">Company</Label>
-                <Input value={exp.company} onChange={e => update(exp.id, 'company', e.target.value)} placeholder="Google" className="mt-1" />
+                <label className="ios-label">Company</label>
+                <Input value={exp.company} onChange={e => update(exp.id, 'company', e.target.value)} placeholder="Google" className="ios-input w-full" />
               </div>
               <div>
-                <Label className="text-xs">Start Date</Label>
-                <Input type="month" value={exp.startDate} onChange={e => update(exp.id, 'startDate', e.target.value)} className="mt-1" />
+                <label className="ios-label">Start Date</label>
+                <Input type="month" value={exp.startDate} onChange={e => update(exp.id, 'startDate', e.target.value)} className="ios-input w-full" />
               </div>
               <div>
-                <Label className="text-xs">End Date</Label>
-                <Input type="month" value={exp.endDate} onChange={e => update(exp.id, 'endDate', e.target.value)} disabled={exp.current} className="mt-1" />
+                <label className="ios-label">End Date</label>
+                <Input type="month" value={exp.endDate} onChange={e => update(exp.id, 'endDate', e.target.value)} disabled={exp.current} className="ios-input w-full" />
                 <div className="flex items-center gap-2 mt-2">
                   <Switch checked={exp.current} onCheckedChange={v => update(exp.id, 'current', v)} />
                   <span className="text-xs text-muted-foreground">Currently working here</span>
@@ -69,15 +67,15 @@ const ExperienceStep = () => {
               </div>
             </div>
             <div>
-              <Label className="text-xs">Description</Label>
-              <Textarea value={exp.description} onChange={e => update(exp.id, 'description', e.target.value)} placeholder="Describe your responsibilities and achievements..." rows={3} className="mt-1 resize-none" />
+              <label className="ios-label">Description</label>
+              <Textarea value={exp.description} onChange={e => update(exp.id, 'description', e.target.value)} placeholder="Describe your responsibilities..." rows={3} className="ios-input h-auto py-3 resize-none w-full" />
             </div>
           </motion.div>
         ))}
       </AnimatePresence>
-      <Button onClick={add} variant="outline" className="w-full border-dashed border-2 hover-lift btn-press">
-        <Plus className="w-4 h-4 mr-2" /> Add Experience
-      </Button>
+      <button onClick={add} className="w-full h-14 rounded-2xl border-2 border-dashed border-border/60 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors active:scale-[0.98]">
+        <Plus className="w-4 h-4" /> Add Experience
+      </button>
     </motion.div>
   );
 };
