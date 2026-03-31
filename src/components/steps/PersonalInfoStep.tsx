@@ -1,7 +1,6 @@
 import { useCVContext } from '@/context/CVContext';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { User, Mail, Phone, MapPin, Globe, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -31,52 +30,54 @@ const PersonalInfoStep = () => {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="text-center mb-8">
-        <label className="cursor-pointer inline-block group">
-          <div className="w-24 h-24 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center mx-auto overflow-hidden hover-lift group-hover:border-primary/60 transition-colors">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+      {/* Photo upload */}
+      <div className="flex justify-center">
+        <label className="cursor-pointer group">
+          <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden group-hover:border-primary/50 transition-colors bg-[hsl(var(--ios-input-bg))]">
             {p.profileImage ? (
               <img src={p.profileImage} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-              <Camera className="w-8 h-8 text-muted-foreground" />
+              <Camera className="w-7 h-7 text-muted-foreground" />
             )}
           </div>
           <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-          <p className="text-sm text-muted-foreground mt-2">Upload photo</p>
+          <p className="text-[11px] text-muted-foreground mt-1.5 text-center">Upload photo</p>
         </label>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Fields */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {fields.map((f, i) => (
           <motion.div
             key={f.key}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: i * 0.04 }}
           >
-            <Label className="text-sm font-medium mb-1.5 flex items-center gap-2">
-              <f.icon className="w-3.5 h-3.5 text-primary" />
+            <label className="ios-label flex items-center gap-1.5">
+              <f.icon className="w-3 h-3 text-primary" />
               {f.label}
-            </Label>
+            </label>
             <Input
               value={(p as any)[f.key] || ''}
               onChange={(e) => update(f.key, e.target.value)}
               placeholder={f.placeholder}
               type={f.type || 'text'}
-              className="glass-card border-border/50 focus:glow-primary-sm transition-shadow"
+              className="ios-input w-full"
             />
           </motion.div>
         ))}
       </div>
 
       <div>
-        <Label className="text-sm font-medium mb-1.5">Professional Summary</Label>
+        <label className="ios-label">Professional Summary</label>
         <Textarea
           value={p.summary || ''}
           onChange={(e) => update('summary', e.target.value)}
           placeholder="Brief professional summary highlighting your key strengths..."
           rows={4}
-          className="glass-card border-border/50 focus:glow-primary-sm transition-shadow resize-none"
+          className="ios-input h-auto py-3 resize-none"
         />
       </div>
     </motion.div>

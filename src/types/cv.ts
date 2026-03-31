@@ -41,14 +41,14 @@ export interface Experience {
 export interface Skill {
   id: string;
   name: string;
-  level: number; // 0-100
+  level: number;
   category: 'technical' | 'soft' | 'other';
 }
 
 export interface Language {
   id: string;
   name: string;
-  level: number; // 0-100
+  level: number;
   proficiency: string;
 }
 
@@ -69,6 +69,8 @@ export interface CVDesign {
   template: string;
   primaryColor: string;
   fontStyle: string;
+  photoStyle: 'circle' | 'square' | 'hidden';
+  spacing: 'compact' | 'normal' | 'spacious';
 }
 
 export interface CVData {
@@ -107,5 +109,7 @@ export const defaultCVData: CVData = {
     template: 'modern',
     primaryColor: '#6C5CE7',
     fontStyle: 'modern',
+    photoStyle: 'circle',
+    spacing: 'normal',
   },
 };

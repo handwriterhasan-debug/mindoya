@@ -1,8 +1,6 @@
 import { useCVContext } from '@/context/CVContext';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Plus, Trash2, Trophy, Heart, PenLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 } from '@/lib/utils';
@@ -11,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 const ExtrasStep = () => {
   const { data, updateData } = useCVContext();
 
-  // Hobbies
   const addHobby = (value: string) => {
     if (value.trim() && !data.hobbies.includes(value.trim())) {
       updateData('hobbies', [...data.hobbies, value.trim()]);
@@ -19,7 +16,6 @@ const ExtrasStep = () => {
   };
   const removeHobby = (h: string) => updateData('hobbies', data.hobbies.filter(x => x !== h));
 
-  // Achievements
   const addAchievement = () => {
     updateData('achievements', [...data.achievements, { id: v4(), title: '', description: '', date: '' }]);
   };
@@ -28,7 +24,6 @@ const ExtrasStep = () => {
     updateData('achievements', data.achievements.map(a => a.id === id ? { ...a, [field]: value } : a));
   };
 
-  // Custom sections
   const addCustom = () => {
     updateData('customSections', [...data.customSections, { id: v4(), title: '', content: '' }]);
   };
@@ -38,63 +33,75 @@ const ExtrasStep = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-7">
       {/* Hobbies */}
       <div>
-        <h3 className="font-heading font-semibold flex items-center gap-2 mb-3">
-          <Heart className="w-4 h-4 text-primary" /> Hobbies & Interests
-        </h3>
+        <label className="ios-label flex items-center gap-1.5">
+          <Heart className="w-3.5 h-3.5 text-primary" /> Hobbies & Interests
+        </label>
         <div className="flex flex-wrap gap-2 mb-3">
           {data.hobbies.map(h => (
-            <Badge key={h} variant="secondary" className="cursor-pointer hover:bg-destructive/10 transition-colors" onClick={() => removeHobby(h)}>
+            <Badge key={h} variant="secondary" className="cursor-pointer hover:bg-destructive/10 transition-colors rounded-xl px-3 py-1.5" onClick={() => removeHobby(h)}>
               {h} <span className="ml-1 text-destructive">×</span>
             </Badge>
           ))}
         </div>
-        <Input placeholder="Type a hobby and press Enter" className="glass-card"
+        <Input placeholder="Type a hobby and press Enter" className="ios-input w-full"
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addHobby((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; } }}
         />
       </div>
 
       {/* Achievements */}
       <div>
-        <h3 className="font-heading font-semibold flex items-center gap-2 mb-3">
-          <Trophy className="w-4 h-4 text-primary" /> Achievements
-        </h3>
+        <label className="ios-label flex items-center gap-1.5">
+          <Trophy className="w-3.5 h-3.5 text-primary" /> Achievements
+        </label>
         <AnimatePresence>
           {data.achievements.map((a, i) => (
-            <motion.div key={a.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="glass-card rounded-xl p-4 mb-3 space-y-2">
+            <motion.div key={a.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="bg-[hsl(var(--ios-input-bg))] rounded-2xl p-4 mb-3 space-y-2"
+            >
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Achievement {i + 1}</Label>
-                <Button variant="ghost" size="icon" onClick={() => removeAchievement(a.id)} className="text-destructive h-6 w-6"><Trash2 className="w-3 h-3" /></Button>
+                <span className="text-xs font-medium text-muted-foreground">Achievement {i + 1}</span>
+                <button onClick={() => removeAchievement(a.id)} className="text-destructive p-1 rounded-lg hover:bg-destructive/10">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <Input value={a.title} onChange={e => updateAchievement(a.id, 'title', e.target.value)} placeholder="Title" />
-              <Input value={a.description} onChange={e => updateAchievement(a.id, 'description', e.target.value)} placeholder="Description" />
-              <Input type="month" value={a.date} onChange={e => updateAchievement(a.id, 'date', e.target.value)} />
+              <Input value={a.title} onChange={e => updateAchievement(a.id, 'title', e.target.value)} placeholder="Title" className="ios-input w-full" />
+              <Input value={a.description} onChange={e => updateAchievement(a.id, 'description', e.target.value)} placeholder="Description" className="ios-input w-full" />
+              <Input type="month" value={a.date} onChange={e => updateAchievement(a.id, 'date', e.target.value)} className="ios-input w-full" />
             </motion.div>
           ))}
         </AnimatePresence>
-        <Button onClick={addAchievement} variant="outline" className="w-full border-dashed border-2 btn-press"><Plus className="w-4 h-4 mr-2" /> Add Achievement</Button>
+        <button onClick={addAchievement} className="w-full h-14 rounded-2xl border-2 border-dashed border-border/60 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors active:scale-[0.98]">
+          <Plus className="w-4 h-4" /> Add Achievement
+        </button>
       </div>
 
       {/* Custom Sections */}
       <div>
-        <h3 className="font-heading font-semibold flex items-center gap-2 mb-3">
-          <PenLine className="w-4 h-4 text-primary" /> Custom Sections
-        </h3>
+        <label className="ios-label flex items-center gap-1.5">
+          <PenLine className="w-3.5 h-3.5 text-primary" /> Custom Sections
+        </label>
         <AnimatePresence>
           {data.customSections.map((c, i) => (
-            <motion.div key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="glass-card rounded-xl p-4 mb-3 space-y-2">
+            <motion.div key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="bg-[hsl(var(--ios-input-bg))] rounded-2xl p-4 mb-3 space-y-2"
+            >
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Section {i + 1}</Label>
-                <Button variant="ghost" size="icon" onClick={() => removeCustom(c.id)} className="text-destructive h-6 w-6"><Trash2 className="w-3 h-3" /></Button>
+                <span className="text-xs font-medium text-muted-foreground">Section {i + 1}</span>
+                <button onClick={() => removeCustom(c.id)} className="text-destructive p-1 rounded-lg hover:bg-destructive/10">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <Input value={c.title} onChange={e => updateCustom(c.id, 'title', e.target.value)} placeholder="Section Title" />
-              <Textarea value={c.content} onChange={e => updateCustom(c.id, 'content', e.target.value)} placeholder="Content..." rows={3} className="resize-none" />
+              <Input value={c.title} onChange={e => updateCustom(c.id, 'title', e.target.value)} placeholder="Section Title" className="ios-input w-full" />
+              <Textarea value={c.content} onChange={e => updateCustom(c.id, 'content', e.target.value)} placeholder="Content..." rows={3} className="ios-input h-auto py-3 resize-none w-full" />
             </motion.div>
           ))}
         </AnimatePresence>
-        <Button onClick={addCustom} variant="outline" className="w-full border-dashed border-2 btn-press"><Plus className="w-4 h-4 mr-2" /> Add Custom Section</Button>
+        <button onClick={addCustom} className="w-full h-14 rounded-2xl border-2 border-dashed border-border/60 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors active:scale-[0.98]">
+          <Plus className="w-4 h-4" /> Add Custom Section
+        </button>
       </div>
     </motion.div>
   );
