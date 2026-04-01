@@ -1,36 +1,34 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Link2, QrCode, X, PartyPopper, Image } from 'lucide-react';
+import { Download, Link2, X, PartyPopper, Image, Loader2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { QRCodeSVG } from 'qrcode.react';
 import { toast } from '@/hooks/use-toast';
 
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState(false);
   const [exportingPng, setExportingPng] = useState(false);
   const [done, setDone] = useState(false);
-  const [showQR, setShowQR] = useState(false);
   const { data } = useCVContext();
 
-  const shareUrl = window.location.href;
-
-  const getCanvas = async () => {
+  const getCanvas = useCallback(async () => {
     const el = document.getElementById('cv-output');
-    if (!el) throw new Error('CV not found');
+    if (!el) throw new Error('CV preview element not found. Please make sure the preview is visible.');
     return html2canvas(el, {
-      scale: 3,
+      scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false,
       windowWidth: el.scrollWidth,
       windowHeight: el.scrollHeight,
+      allowTaint: true,
     });
-  };
+  }, []);
 
-  const exportPDF = async () => {
+  const exportPDF = useCallback(async () => {
+    if (exporting) return;
     setExporting(true);
     try {
       const canvas = await getCanvas();
@@ -54,36 +52,43 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         heightLeft -= pdfHeight;
       }
 
-      pdf.save(`${data.personal.fullName || 'resume'}-cv.pdf`);
+      const fileName = `${data.personal.fullName || 'resume'}-cv.pdf`;
+      pdf.save(fileName);
       setDone(true);
-      toast({ title: '🎉 PDF exported!', description: 'Print-ready quality' });
-    } catch {
-      toast({ title: 'Export failed', description: 'Please try again', variant: 'destructive' });
+      toast({ title: '🎉 PDF exported!', description: 'Print-ready quality PDF downloaded.' });
+    } catch (err: any) {
+      console.error('PDF export error:', err);
+      toast({ title: 'Export failed', description: err?.message || 'Could not generate PDF. Please try again.', variant: 'destructive' });
     } finally {
       setExporting(false);
     }
-  };
+  }, [exporting, getCanvas, data.personal.fullName]);
 
-  const exportPNG = async () => {
+  const exportPNG = useCallback(async () => {
+    if (exportingPng) return;
     setExportingPng(true);
     try {
       const canvas = await getCanvas();
       const link = document.createElement('a');
-      link.download = `${data.personal.fullName || 'resume'}-cv.png`;
+      const fileName = `${data.personal.fullName || 'resume'}-cv.png`;
+      link.download = fileName;
       link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
       link.click();
-      toast({ title: '🎉 PNG exported!', description: 'Social media quality' });
-    } catch {
-      toast({ title: 'Export failed', variant: 'destructive' });
+      document.body.removeChild(link);
+      toast({ title: '🎉 PNG exported!', description: 'High quality PNG downloaded.' });
+    } catch (err: any) {
+      console.error('PNG export error:', err);
+      toast({ title: 'Export failed', description: err?.message || 'Could not generate PNG. Please try again.', variant: 'destructive' });
     } finally {
       setExportingPng(false);
     }
-  };
+  }, [exportingPng, getCanvas, data.personal.fullName]);
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
+  const copyLink = useCallback(() => {
+    navigator.clipboard.writeText(window.location.href);
     toast({ title: '✓ Link copied!', duration: 2000 });
-  };
+  }, []);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -108,35 +113,32 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
             <PartyPopper className="w-14 h-14 mx-auto text-primary mb-3" />
             <h3 className="font-heading font-bold text-lg gradient-text">Your CV is Ready!</h3>
             <p className="text-sm text-muted-foreground mt-1">Go get that job 🚀</p>
+            <Button variant="outline" className="mt-4" onClick={() => setDone(false)}>Export Again</Button>
           </motion.div>
         ) : (
           <div className="space-y-2.5">
-            <Button onClick={exportPDF} disabled={exporting} className="w-full gradient-primary text-primary-foreground h-[52px] rounded-xl text-sm font-semibold">
-              <Download className="w-4 h-4 mr-2" /> {exporting ? 'Generating PDF...' : 'Download PDF (Print Quality)'}
+            <Button
+              onClick={exportPDF}
+              disabled={exporting}
+              className="w-full gradient-primary text-primary-foreground h-[52px] rounded-xl text-sm font-semibold"
+            >
+              {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              {exporting ? 'Generating PDF...' : 'Download PDF (Print Quality)'}
             </Button>
-            <Button onClick={exportPNG} disabled={exportingPng} variant="outline" className="w-full h-[52px] rounded-xl text-sm font-semibold">
-              <Image className="w-4 h-4 mr-2" /> {exportingPng ? 'Generating PNG...' : 'Download PNG (Social Media)'}
+            <Button
+              onClick={exportPNG}
+              disabled={exportingPng}
+              variant="outline"
+              className="w-full h-[52px] rounded-xl text-sm font-semibold"
+            >
+              {exportingPng ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
+              {exportingPng ? 'Generating PNG...' : 'Download PNG (Social Media)'}
             </Button>
             <Button onClick={copyLink} variant="outline" className="w-full h-12 rounded-xl text-sm">
               <Link2 className="w-4 h-4 mr-2" /> Copy Shareable Link
             </Button>
-            <Button onClick={() => setShowQR(!showQR)} variant="outline" className="w-full h-12 rounded-xl text-sm">
-              <QrCode className="w-4 h-4 mr-2" /> {showQR ? 'Hide' : 'Show'} QR Code
-            </Button>
           </div>
         )}
-
-        <AnimatePresence>
-          {showQR && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              className="flex justify-center overflow-hidden"
-            >
-              <div className="bg-[hsl(var(--ios-input-bg))] p-4 rounded-2xl">
-                <QRCodeSVG value={shareUrl} size={160} level="H" />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </motion.div>
   );

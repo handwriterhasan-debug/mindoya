@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Palette, Home } from 'lucide-react';
+import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Palette, Loader2 } from 'lucide-react';
 import PersonalInfoStep from '@/components/steps/PersonalInfoStep';
 import ExperienceStep from '@/components/steps/ExperienceStep';
 import EducationStep from '@/components/steps/EducationStep';
@@ -29,13 +29,36 @@ const CVBuilder = () => {
   const { step, setStep, viewMode, setViewMode, undo, redo, canUndo, canRedo } = useCVContext();
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const tabBarRef = useRef<HTMLDivElement>(null);
   const CurrentStep = steps[step].component;
+
+  // Auto-scroll active tab into view
+  useEffect(() => {
+    if (tabBarRef.current) {
+      const activeTab = tabBarRef.current.children[step] as HTMLElement;
+      if (activeTab) {
+        activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [step]);
+
+  const handleExport = useCallback(() => {
+    setShowExport(true);
+  }, []);
+
+  const handlePrev = useCallback(() => {
+    if (step > 0) setStep(step - 1);
+  }, [step, setStep]);
+
+  const handleNext = useCallback(() => {
+    if (step < steps.length - 1) setStep(step + 1);
+  }, [step, setStep]);
 
   return (
     <div className="min-h-screen bg-[hsl(var(--ios-bg))]">
-      {/* Top Bar - thin & clean */}
+      {/* Top Bar */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50">
-        <div className="flex items-center justify-between h-12 px-4 max-w-[1400px] mx-auto">
+        <div className="flex items-center justify-between h-12 px-3 sm:px-4 max-w-[1400px] mx-auto">
           <h1 className="font-heading font-bold text-base gradient-text">Mindoya</h1>
           <div className="flex items-center gap-1.5">
             <Button variant="ghost" size="icon" onClick={undo} disabled={!canUndo} className="h-8 w-8">
@@ -58,10 +81,19 @@ const CVBuilder = () => {
                 <FileText className="w-3 h-3" /> Print
               </button>
             </div>
-            <Button variant="outline" size="sm" className="sm:hidden h-8 text-xs" onClick={() => setShowPreview(!showPreview)}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="lg:hidden h-8 text-xs"
+              onClick={() => setShowPreview(!showPreview)}
+            >
               <Eye className="w-3.5 h-3.5 mr-1" /> {showPreview ? 'Edit' : 'Preview'}
             </Button>
-            <Button size="sm" className="gradient-primary text-primary-foreground h-8 text-xs rounded-lg" onClick={() => setShowExport(true)}>
+            <Button
+              size="sm"
+              className="gradient-primary text-primary-foreground h-8 text-xs rounded-lg"
+              onClick={handleExport}
+            >
               Export
             </Button>
           </div>
@@ -77,32 +109,37 @@ const CVBuilder = () => {
         </div>
       </header>
 
-      <div className="max-w-[1400px] mx-auto px-4 py-4 lg:py-6">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-4 lg:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[440px_1fr] gap-6">
           {/* Left: Form */}
           <div className={`flex flex-col ${showPreview ? 'hidden lg:flex' : ''}`}>
-            {/* Step Navigator - horizontal scroll */}
-            <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-3 -mx-1 px-1">
+            {/* Step Navigator - horizontal scroll, no overlap */}
+            <div
+              ref={tabBarRef}
+              className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-3 -mx-1 px-1"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
               {steps.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => setStep(i)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all min-w-[44px] justify-center ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0 ${
                     step === i
                       ? 'gradient-primary text-primary-foreground shadow-md'
                       : i < step
                       ? 'bg-card text-accent-foreground shadow-sm'
                       : 'text-muted-foreground hover:bg-card/60'
                   }`}
+                  style={{ minWidth: '80px' }}
                 >
-                  <s.icon className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline">{s.label}</span>
+                  <s.icon className="w-4 h-4 shrink-0 sm:w-[18px] sm:h-[18px]" />
+                  <span>{s.label}</span>
                 </button>
               ))}
             </div>
 
             {/* Step Content */}
-            <div className="ios-card flex-1 overflow-y-auto max-h-[calc(100vh-220px)] lg:max-h-[calc(100vh-200px)]">
+            <div className="ios-card flex-1 overflow-y-auto max-h-[calc(100vh-280px)] lg:max-h-[calc(100vh-200px)]">
               <div className="flex items-center gap-2 mb-5">
                 {(() => { const Icon = steps[step].icon; return <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center"><Icon className="w-4 h-4 text-primary-foreground" /></div>; })()}
                 <div>
@@ -116,21 +153,27 @@ const CVBuilder = () => {
             </div>
 
             {/* Sticky Navigation */}
-            <div className="flex gap-3 pt-3 sticky bottom-0 bg-[hsl(var(--ios-bg))] pb-4 lg:pb-0">
+            <div className="flex gap-3 pt-3 sticky bottom-0 bg-[hsl(var(--ios-bg))] pb-4 lg:pb-0 z-10">
               <Button
                 variant="outline"
                 disabled={step === 0}
-                onClick={() => setStep(step - 1)}
+                onClick={handlePrev}
                 className="flex-1 h-[52px] rounded-xl text-sm font-semibold"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" /> Previous
               </Button>
               {step === steps.length - 1 ? (
-                <Button onClick={() => setShowExport(true)} className="flex-1 h-[52px] rounded-xl gradient-primary text-primary-foreground text-sm font-semibold glow-primary-sm">
+                <Button
+                  onClick={handleExport}
+                  className="flex-1 h-[52px] rounded-xl gradient-primary text-primary-foreground text-sm font-semibold glow-primary-sm"
+                >
                   Finish & Export <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               ) : (
-                <Button onClick={() => setStep(step + 1)} className="flex-1 h-[52px] rounded-xl gradient-primary text-primary-foreground text-sm font-semibold">
+                <Button
+                  onClick={handleNext}
+                  className="flex-1 h-[52px] rounded-xl gradient-primary text-primary-foreground text-sm font-semibold"
+                >
                   Next <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               )}
@@ -148,7 +191,9 @@ const CVBuilder = () => {
         </div>
       </div>
 
-      {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
+      <AnimatePresence>
+        {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
+      </AnimatePresence>
     </div>
   );
 };
