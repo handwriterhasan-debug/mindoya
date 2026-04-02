@@ -1,7 +1,6 @@
 import { useCVContext } from '@/context/CVContext';
-import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { Palette, Type, Layout, Image, Maximize, FileText } from 'lucide-react';
+import { Palette, Type, Layout, Image, Maximize } from 'lucide-react';
 
 const colorThemes = [
   { name: 'Purple', value: '#6C5CE7' },
@@ -27,25 +26,27 @@ const colorThemes = [
 ];
 
 const fontStyles = [
-  { name: 'Modern', value: 'modern', preview: 'Aa' },
-  { name: 'Classic Serif', value: 'classic', preview: 'Aa' },
-  { name: 'Tech Mono', value: 'mono', preview: 'Aa' },
-  { name: 'Elegant', value: 'elegant', preview: 'Aa' },
-  { name: 'Bold Impact', value: 'bold', preview: 'Aa' },
-  { name: 'Minimal', value: 'minimal', preview: 'Aa' },
-  { name: 'Corporate', value: 'corporate', preview: 'Aa' },
-  { name: 'Creative', value: 'creative', preview: 'Aa' },
+  { name: 'Modern Sans', value: 'modern', sample: 'Clean & modern' },
+  { name: 'Classic Serif', value: 'classic', sample: 'Timeless elegance' },
+  { name: 'Tech Mono', value: 'mono', sample: 'Developer style' },
+  { name: 'Elegant', value: 'elegant', sample: 'Sophisticated feel' },
+  { name: 'Bold Impact', value: 'bold', sample: 'Strong & punchy' },
+  { name: 'Minimal', value: 'minimal', sample: 'Light & airy' },
+  { name: 'Corporate', value: 'corporate', sample: 'Professional look' },
+  { name: 'Creative', value: 'creative', sample: 'Unique & fresh' },
 ];
 
 const templates = [
   { name: 'Modern Timeline', value: 'modern', desc: 'Clean timeline layout' },
   { name: 'Executive Dark', value: 'executive', desc: 'Navy sidebar, gold accents' },
   { name: 'Creative Split', value: 'creative', desc: 'Bold color block with photo' },
-  { name: 'Minimal Swiss', value: 'minimal', desc: 'Ultra clean, lots of whitespace' },
-  { name: 'Tech/Developer', value: 'tech', desc: 'Monospace accents, GitHub-style' },
-  { name: 'Infographic', value: 'infographic', desc: 'Data visualization style' },
-  { name: 'Magazine', value: 'magazine', desc: 'Editorial layout, large typography' },
+  { name: 'Minimal Swiss', value: 'minimal', desc: 'Ultra clean, whitespace' },
+  { name: 'Tech/Developer', value: 'tech', desc: 'GitHub-style dark theme' },
+  { name: 'Infographic', value: 'infographic', desc: 'Circular charts, visual' },
+  { name: 'Magazine', value: 'magazine', desc: 'Editorial, large typography' },
   { name: 'Classic Corporate', value: 'classic', desc: 'ATS-friendly, traditional' },
+  { name: 'Two Column', value: 'twocolumn', desc: 'Left info, right content' },
+  { name: 'Gradient Header', value: 'gradient', desc: 'Bold gradient top band' },
 ];
 
 const photoStyles = [
@@ -59,6 +60,18 @@ const spacingOptions = [
   { name: 'Normal', value: 'normal' as const },
   { name: 'Spacious', value: 'spacious' as const },
 ];
+
+// Font previews mapped to actual Google Fonts loaded
+const fontPreviewStyle: Record<string, React.CSSProperties> = {
+  modern: { fontFamily: "'DM Sans', 'Plus Jakarta Sans', sans-serif" },
+  classic: { fontFamily: "'Georgia', 'Cambria', serif" },
+  mono: { fontFamily: "'Courier New', 'Consolas', monospace" },
+  elegant: { fontFamily: "'Georgia', 'Palatino', serif", fontStyle: 'italic' },
+  bold: { fontFamily: "'Arial Black', 'Impact', sans-serif", fontWeight: 900 },
+  minimal: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif", fontWeight: 300 },
+  corporate: { fontFamily: "'Segoe UI', 'Calibri', sans-serif" },
+  creative: { fontFamily: "'DM Sans', 'Trebuchet MS', sans-serif" },
+};
 
 const DesignStep = () => {
   const { data, updateData } = useCVContext();
@@ -123,7 +136,7 @@ const DesignStep = () => {
         </div>
       </div>
 
-      {/* Fonts */}
+      {/* Fonts - with live preview of each font */}
       <div>
         <label className="ios-label flex items-center gap-1.5">
           <Type className="w-3.5 h-3.5 text-primary" /> Font Style
@@ -133,13 +146,14 @@ const DesignStep = () => {
             <button
               key={f.value}
               onClick={() => update('fontStyle', f.value)}
-              className={`py-2.5 px-3 rounded-xl text-xs font-medium transition-all active:scale-[0.97] ${
+              className={`py-3 px-3 rounded-xl text-left transition-all active:scale-[0.97] ${
                 design.fontStyle === f.value
-                  ? 'gradient-primary text-primary-foreground shadow-md'
-                  : 'bg-[hsl(var(--ios-input-bg))] text-muted-foreground hover:bg-secondary'
+                  ? 'ring-2 ring-primary bg-accent shadow-md'
+                  : 'bg-[hsl(var(--ios-input-bg))] hover:bg-secondary'
               }`}
             >
-              {f.name}
+              <span className="block text-sm font-semibold" style={fontPreviewStyle[f.value]}>{f.name}</span>
+              <span className="text-[10px] text-muted-foreground" style={fontPreviewStyle[f.value]}>{f.sample}</span>
             </button>
           ))}
         </div>

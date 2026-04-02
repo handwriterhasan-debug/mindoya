@@ -2,22 +2,21 @@ import { useState, useCallback } from 'react';
 import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Link2, X, PartyPopper, Image, Loader2 } from 'lucide-react';
+import { Download, X, PartyPopper, Image, Loader2, FileText, Camera } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from '@/hooks/use-toast';
 
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
-  const [exporting, setExporting] = useState(false);
-  const [exportingPng, setExportingPng] = useState(false);
+  const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const { data } = useCVContext();
 
-  const getCanvas = useCallback(async () => {
+  const getCanvas = useCallback(async (scale = 2) => {
     const el = document.getElementById('cv-output');
-    if (!el) throw new Error('CV preview element not found. Please make sure the preview is visible.');
+    if (!el) throw new Error('CV preview not found. Make sure preview is visible.');
     return html2canvas(el, {
-      scale: 2,
+      scale,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false,
@@ -27,11 +26,13 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     });
   }, []);
 
+  const fileName = data.personal.fullName?.trim() || 'resume';
+
   const exportPDF = useCallback(async () => {
     if (exporting) return;
-    setExporting(true);
+    setExporting('pdf');
     try {
-      const canvas = await getCanvas();
+      const canvas = await getCanvas(3);
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -52,26 +53,24 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         heightLeft -= pdfHeight;
       }
 
-      const fileName = `${data.personal.fullName || 'resume'}-cv.pdf`;
-      pdf.save(fileName);
+      pdf.save(`${fileName}-cv.pdf`);
       setDone(true);
-      toast({ title: '🎉 PDF exported!', description: 'Print-ready quality PDF downloaded.' });
+      toast({ title: '🎉 PDF exported!', description: 'Print-ready A4 PDF downloaded.' });
     } catch (err: any) {
       console.error('PDF export error:', err);
-      toast({ title: 'Export failed', description: err?.message || 'Could not generate PDF. Please try again.', variant: 'destructive' });
+      toast({ title: 'Export failed', description: err?.message || 'Could not generate PDF.', variant: 'destructive' });
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
-  }, [exporting, getCanvas, data.personal.fullName]);
+  }, [exporting, getCanvas, fileName]);
 
   const exportPNG = useCallback(async () => {
-    if (exportingPng) return;
-    setExportingPng(true);
+    if (exporting) return;
+    setExporting('png');
     try {
-      const canvas = await getCanvas();
+      const canvas = await getCanvas(2);
       const link = document.createElement('a');
-      const fileName = `${data.personal.fullName || 'resume'}-cv.png`;
-      link.download = fileName;
+      link.download = `${fileName}-cv.png`;
       link.href = canvas.toDataURL('image/png');
       document.body.appendChild(link);
       link.click();
@@ -79,16 +78,54 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       toast({ title: '🎉 PNG exported!', description: 'High quality PNG downloaded.' });
     } catch (err: any) {
       console.error('PNG export error:', err);
-      toast({ title: 'Export failed', description: err?.message || 'Could not generate PNG. Please try again.', variant: 'destructive' });
+      toast({ title: 'Export failed', description: err?.message || 'Could not generate PNG.', variant: 'destructive' });
     } finally {
-      setExportingPng(false);
+      setExporting(null);
     }
-  }, [exportingPng, getCanvas, data.personal.fullName]);
+  }, [exporting, getCanvas, fileName]);
 
-  const copyLink = useCallback(() => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({ title: '✓ Link copied!', duration: 2000 });
-  }, []);
+  const exportScreenshot = useCallback(async () => {
+    if (exporting) return;
+    setExporting('screenshot');
+    try {
+      const canvas = await getCanvas(2);
+      
+      // Create A4-ratio screenshot (210mm x 297mm = ~595 x 842 at 72dpi, we use 2x)
+      const a4Width = 1190;
+      const a4Height = 1684;
+      const screenshotCanvas = document.createElement('canvas');
+      screenshotCanvas.width = a4Width;
+      screenshotCanvas.height = a4Height;
+      const ctx = screenshotCanvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context not available');
+      
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, a4Width, a4Height);
+      
+      // Scale and draw content to fit A4
+      const scaleX = a4Width / canvas.width;
+      const scaleY = a4Height / canvas.height;
+      const scale = Math.min(scaleX, scaleY);
+      const offsetX = (a4Width - canvas.width * scale) / 2;
+      const offsetY = 0;
+      
+      ctx.drawImage(canvas, offsetX, offsetY, canvas.width * scale, canvas.height * scale);
+      
+      const link = document.createElement('a');
+      link.download = `${fileName}-screenshot.png`;
+      link.href = screenshotCanvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: '🎉 Screenshot exported!', description: 'A4-sized screenshot downloaded.' });
+    } catch (err: any) {
+      console.error('Screenshot export error:', err);
+      toast({ title: 'Export failed', description: err?.message || 'Could not generate screenshot.', variant: 'destructive' });
+    } finally {
+      setExporting(null);
+    }
+  }, [exporting, getCanvas, fileName]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -119,23 +156,29 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           <div className="space-y-2.5">
             <Button
               onClick={exportPDF}
-              disabled={exporting}
+              disabled={!!exporting}
               className="w-full gradient-primary text-primary-foreground h-[52px] rounded-xl text-sm font-semibold"
             >
-              {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-              {exporting ? 'Generating PDF...' : 'Download PDF (Print Quality)'}
+              {exporting === 'pdf' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+              {exporting === 'pdf' ? 'Generating PDF...' : 'Download PDF (A4 Print Quality)'}
             </Button>
             <Button
               onClick={exportPNG}
-              disabled={exportingPng}
+              disabled={!!exporting}
               variant="outline"
               className="w-full h-[52px] rounded-xl text-sm font-semibold"
             >
-              {exportingPng ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
-              {exportingPng ? 'Generating PNG...' : 'Download PNG (Social Media)'}
+              {exporting === 'png' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
+              {exporting === 'png' ? 'Generating PNG...' : 'Download PNG (High Quality)'}
             </Button>
-            <Button onClick={copyLink} variant="outline" className="w-full h-12 rounded-xl text-sm">
-              <Link2 className="w-4 h-4 mr-2" /> Copy Shareable Link
+            <Button
+              onClick={exportScreenshot}
+              disabled={!!exporting}
+              variant="outline"
+              className="w-full h-12 rounded-xl text-sm font-semibold"
+            >
+              {exporting === 'screenshot' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Camera className="w-4 h-4 mr-2" />}
+              {exporting === 'screenshot' ? 'Capturing...' : 'Screenshot (A4 Size)'}
             </Button>
           </div>
         )}
