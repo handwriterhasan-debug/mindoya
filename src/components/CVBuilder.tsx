@@ -197,6 +197,8 @@ const CVBuilder = () => {
       <AnimatePresence>
         {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
       </AnimatePresence>
+
+      <VorynixBadge />
     </div>
   );
 };
