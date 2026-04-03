@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, PartyPopper, Image, Loader2, FileText, Camera } from 'lucide-react';
+import { X, PartyPopper, Loader2, FileText, Camera, Image } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from '@/hooks/use-toast';
@@ -12,45 +12,81 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [done, setDone] = useState(false);
   const { data } = useCVContext();
 
-  const getCanvas = useCallback(async (scale = 2) => {
+  const fileName = data.personal.fullName?.trim().replace(/\s+/g, '_') || 'resume';
+
+  const captureCV = useCallback(async (scale = 2) => {
     const el = document.getElementById('cv-output');
-    if (!el) throw new Error('CV preview not found. Make sure preview is visible.');
-    return html2canvas(el, {
-      scale,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: el.scrollWidth,
-      windowHeight: el.scrollHeight,
-      allowTaint: true,
-    });
+    if (!el) throw new Error('CV preview not found');
+    
+    // Temporarily remove max-height/overflow constraints for full capture
+    const parent = el.closest('.overflow-auto') as HTMLElement | null;
+    const origStyles: { maxHeight: string; overflow: string } | null = parent ? {
+      maxHeight: parent.style.maxHeight,
+      overflow: parent.style.overflow,
+    } : null;
+    
+    if (parent) {
+      parent.style.maxHeight = 'none';
+      parent.style.overflow = 'visible';
+    }
+
+    try {
+      const canvas = await html2canvas(el, {
+        scale,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
+      });
+      return canvas;
+    } finally {
+      if (parent && origStyles) {
+        parent.style.maxHeight = origStyles.maxHeight;
+        parent.style.overflow = origStyles.overflow;
+      }
+    }
   }, []);
 
-  const fileName = data.personal.fullName?.trim() || 'resume';
+  const downloadBlob = (blob: Blob, name: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const exportPDF = useCallback(async () => {
     if (exporting) return;
     setExporting('pdf');
     try {
-      const canvas = await getCanvas(3);
-      const imgData = canvas.toDataURL('image/png');
+      const canvas = await captureCV(3);
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgW = pdfW;
+      const imgH = (canvas.height * pdfW) / canvas.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      let heightLeft = imgH;
+      let pos = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+      // Use JPEG for smaller file size
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      pdf.addImage(imgData, 'JPEG', 0, pos, imgW, imgH);
+      heightLeft -= pdfH;
 
       while (heightLeft > 0) {
-        position -= pdfHeight;
+        pos -= pdfH;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+        pdf.addImage(imgData, 'JPEG', 0, pos, imgW, imgH);
+        heightLeft -= pdfH;
       }
 
       pdf.save(`${fileName}-cv.pdf`);
@@ -62,19 +98,22 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     } finally {
       setExporting(null);
     }
-  }, [exporting, getCanvas, fileName]);
+  }, [exporting, captureCV, fileName]);
 
   const exportPNG = useCallback(async () => {
     if (exporting) return;
     setExporting('png');
     try {
-      const canvas = await getCanvas(2);
-      const link = document.createElement('a');
-      link.download = `${fileName}-cv.png`;
-      link.href = canvas.toDataURL('image/png');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const canvas = await captureCV(2);
+      // Use toBlob for reliable, non-corrupted output
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error('Failed to create PNG blob'));
+        }, 'image/png');
+      });
+      downloadBlob(blob, `${fileName}-cv.png`);
+      setDone(true);
       toast({ title: '🎉 PNG exported!', description: 'High quality PNG downloaded.' });
     } catch (err: any) {
       console.error('PNG export error:', err);
@@ -82,50 +121,45 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     } finally {
       setExporting(null);
     }
-  }, [exporting, getCanvas, fileName]);
+  }, [exporting, captureCV, fileName]);
 
   const exportScreenshot = useCallback(async () => {
     if (exporting) return;
     setExporting('screenshot');
     try {
-      const canvas = await getCanvas(2);
+      const canvas = await captureCV(2);
       
-      // Create A4-ratio screenshot (210mm x 297mm = ~595 x 842 at 72dpi, we use 2x)
-      const a4Width = 1190;
-      const a4Height = 1684;
-      const screenshotCanvas = document.createElement('canvas');
-      screenshotCanvas.width = a4Width;
-      screenshotCanvas.height = a4Height;
-      const ctx = screenshotCanvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas context not available');
+      // A4 ratio screenshot
+      const a4W = 1190;
+      const a4H = 1684;
+      const sc = document.createElement('canvas');
+      sc.width = a4W;
+      sc.height = a4H;
+      const ctx = sc.getContext('2d');
+      if (!ctx) throw new Error('Canvas context unavailable');
       
-      // White background
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, a4Width, a4Height);
+      ctx.fillRect(0, 0, a4W, a4H);
       
-      // Scale and draw content to fit A4
-      const scaleX = a4Width / canvas.width;
-      const scaleY = a4Height / canvas.height;
-      const scale = Math.min(scaleX, scaleY);
-      const offsetX = (a4Width - canvas.width * scale) / 2;
-      const offsetY = 0;
+      const scale = Math.min(a4W / canvas.width, a4H / canvas.height);
+      const ox = (a4W - canvas.width * scale) / 2;
+      ctx.drawImage(canvas, ox, 0, canvas.width * scale, canvas.height * scale);
       
-      ctx.drawImage(canvas, offsetX, offsetY, canvas.width * scale, canvas.height * scale);
-      
-      const link = document.createElement('a');
-      link.download = `${fileName}-screenshot.png`;
-      link.href = screenshotCanvas.toDataURL('image/png');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        sc.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error('Failed to create screenshot blob'));
+        }, 'image/png');
+      });
+      downloadBlob(blob, `${fileName}-screenshot.png`);
       toast({ title: '🎉 Screenshot exported!', description: 'A4-sized screenshot downloaded.' });
     } catch (err: any) {
       console.error('Screenshot export error:', err);
-      toast({ title: 'Export failed', description: err?.message || 'Could not generate screenshot.', variant: 'destructive' });
+      toast({ title: 'Export failed', description: err?.message || 'Could not capture.', variant: 'destructive' });
     } finally {
       setExporting(null);
     }
-  }, [exporting, getCanvas, fileName]);
+  }, [exporting, captureCV, fileName]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -154,29 +188,18 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           </motion.div>
         ) : (
           <div className="space-y-2.5">
-            <Button
-              onClick={exportPDF}
-              disabled={!!exporting}
-              className="w-full gradient-primary text-primary-foreground h-[52px] rounded-xl text-sm font-semibold"
-            >
+            <Button onClick={exportPDF} disabled={!!exporting}
+              className="w-full gradient-primary text-primary-foreground h-[52px] rounded-xl text-sm font-semibold">
               {exporting === 'pdf' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-              {exporting === 'pdf' ? 'Generating PDF...' : 'Download PDF (A4 Print Quality)'}
+              {exporting === 'pdf' ? 'Generating PDF...' : 'Download PDF (A4 Print)'}
             </Button>
-            <Button
-              onClick={exportPNG}
-              disabled={!!exporting}
-              variant="outline"
-              className="w-full h-[52px] rounded-xl text-sm font-semibold"
-            >
+            <Button onClick={exportPNG} disabled={!!exporting} variant="outline"
+              className="w-full h-[52px] rounded-xl text-sm font-semibold">
               {exporting === 'png' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
               {exporting === 'png' ? 'Generating PNG...' : 'Download PNG (High Quality)'}
             </Button>
-            <Button
-              onClick={exportScreenshot}
-              disabled={!!exporting}
-              variant="outline"
-              className="w-full h-12 rounded-xl text-sm font-semibold"
-            >
+            <Button onClick={exportScreenshot} disabled={!!exporting} variant="outline"
+              className="w-full h-12 rounded-xl text-sm font-semibold">
               {exporting === 'screenshot' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Camera className="w-4 h-4 mr-2" />}
               {exporting === 'screenshot' ? 'Capturing...' : 'Screenshot (A4 Size)'}
             </Button>

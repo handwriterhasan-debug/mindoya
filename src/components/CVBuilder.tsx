@@ -185,7 +185,7 @@ const CVBuilder = () => {
           {/* Right: Preview */}
           <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-14">
-              <div className="bg-card rounded-2xl shadow-lg p-4 overflow-auto max-h-[calc(100vh-80px)] glow-preview">
+              <div className="bg-card rounded-2xl shadow-lg p-4 overflow-auto max-h-[calc(100vh-80px)] glow-preview" style={{ minHeight: '600px' }}>
                 <CVPreview />
               </div>
             </div>
