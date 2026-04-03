@@ -14,6 +14,7 @@ import ExtrasStep from '@/components/steps/ExtrasStep';
 import DesignStep from '@/components/steps/DesignStep';
 import CVPreview from '@/components/CVPreview';
 import ExportPanel from '@/components/ExportPanel';
+import VorynixBadge from '@/components/VorynixBadge';
 
 const steps = [
   { label: 'Personal', icon: User, component: PersonalInfoStep },
