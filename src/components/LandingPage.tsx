@@ -154,11 +154,13 @@ const LandingPage = ({ onStart }: { onStart: (data?: OnboardingData) => void }) 
             {/* Footer */}
             <footer className="container px-4 py-8 text-center border-t border-border">
               <p className="text-sm text-muted-foreground">Made with passion by <span className="font-semibold text-foreground">Hasan</span> ❤️</p>
-              <p className="text-xs text-muted-foreground mt-1">© 2026 Mindoya. All rights reserved.</p>
+              <p className="text-xs text-muted-foreground mt-1">© 2026 Vorynix · Mindoya. All rights reserved.</p>
             </footer>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <VorynixBadge />
     </div>
   );
 };
