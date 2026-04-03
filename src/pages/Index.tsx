@@ -16,7 +16,7 @@ const Index = () => {
 
   return (
     <CVProvider initialData={onboardingData}>
-      <CVBuilder />
+      <CVBuilder onGoHome={() => setStarted(false)} />
     </CVProvider>
   );
 };
