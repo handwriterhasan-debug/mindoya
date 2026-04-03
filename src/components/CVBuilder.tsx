@@ -27,7 +27,7 @@ const steps = [
   { label: 'Design', icon: Palette, component: DesignStep },
 ];
 
-const CVBuilder = () => {
+const CVBuilder = ({ onGoHome }: { onGoHome?: () => void }) => {
   const { step, setStep, viewMode, setViewMode, undo, redo, canUndo, canRedo } = useCVContext();
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
