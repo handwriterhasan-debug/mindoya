@@ -61,7 +61,9 @@ const CVBuilder = ({ onGoHome }: { onGoHome?: () => void }) => {
       {/* Top Bar */}
       <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between h-12 px-3 sm:px-4 max-w-[1400px] mx-auto">
-          <h1 className="font-heading font-bold text-base gradient-text">Mindoya</h1>
+          <button onClick={onGoHome} className="font-heading font-bold text-base gradient-text hover:opacity-80 transition-opacity flex items-center gap-1.5">
+            <ChevronLeft className="w-4 h-4" /> Mindoya
+          </button>
           <div className="flex items-center gap-1.5">
             <Button variant="ghost" size="icon" onClick={undo} disabled={!canUndo} className="h-8 w-8">
               <Undo2 className="w-3.5 h-3.5" />
