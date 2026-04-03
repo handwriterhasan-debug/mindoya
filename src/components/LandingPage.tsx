@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, FileText, Zap, Globe, Instagram, ArrowLeft, User, MapPin, Mail, Calendar } from 'lucide-react';
+import VorynixBadge from '@/components/VorynixBadge';
 
 interface OnboardingData {
   fullName: string;
