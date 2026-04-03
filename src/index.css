@@ -12,6 +12,12 @@
 @import '@fontsource/dm-sans/700.css';
 
 @layer base {
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   :root {
     --background: 220 20% 97%;
     --foreground: 222 47% 11%;

@@ -788,7 +788,7 @@ const CVPreview = () => {
   const TemplateComponent = TEMPLATE_MAP[design.template] || ModernTimeline;
 
   return (
-    <div id="cv-output" className="max-w-[210mm] mx-auto shadow-xl rounded-lg overflow-hidden">
+    <div id="cv-output" className="mx-auto shadow-xl rounded-lg overflow-hidden" style={{ width: '210mm', minHeight: '297mm', maxWidth: '100%' }}>
       <TemplateComponent
         data={data}
         color={color}

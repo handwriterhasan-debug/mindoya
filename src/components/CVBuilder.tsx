@@ -3,6 +3,7 @@ import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Palette, Loader2 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 import PersonalInfoStep from '@/components/steps/PersonalInfoStep';
 import ExperienceStep from '@/components/steps/ExperienceStep';
 import EducationStep from '@/components/steps/EducationStep';
@@ -67,6 +68,7 @@ const CVBuilder = () => {
             <Button variant="ghost" size="icon" onClick={redo} disabled={!canRedo} className="h-8 w-8">
               <Redo2 className="w-3.5 h-3.5" />
             </Button>
+            <ThemeToggle />
             <div className="hidden sm:flex items-center bg-secondary/60 rounded-lg p-0.5 gap-0.5 ml-1">
               <button
                 onClick={() => setViewMode('animated')}
@@ -183,7 +185,7 @@ const CVBuilder = () => {
           {/* Right: Preview */}
           <div className={`${showPreview ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-14">
-              <div className="bg-card rounded-2xl shadow-lg p-4 overflow-auto max-h-[calc(100vh-80px)] glow-preview">
+              <div className="bg-card rounded-2xl shadow-lg p-4 overflow-auto max-h-[calc(100vh-80px)] glow-preview" style={{ minHeight: '600px' }}>
                 <CVPreview />
               </div>
             </div>
