@@ -68,6 +68,7 @@ const CVBuilder = () => {
             <Button variant="ghost" size="icon" onClick={redo} disabled={!canRedo} className="h-8 w-8">
               <Redo2 className="w-3.5 h-3.5" />
             </Button>
+            <ThemeToggle />
             <div className="hidden sm:flex items-center bg-secondary/60 rounded-lg p-0.5 gap-0.5 ml-1">
               <button
                 onClick={() => setViewMode('animated')}
