@@ -1,6 +1,6 @@
 import { useCVContext } from '@/context/CVContext';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Globe, Calendar, Briefcase, GraduationCap, Zap, Globe2, Heart, Trophy, PenLine } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Calendar, Briefcase, GraduationCap, Zap, Globe2, Heart, Trophy, PenLine, UserCircle, Rocket, Cpu } from 'lucide-react';
 import { getPlatformIcon } from '@/components/steps/SocialsStep';
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } };
