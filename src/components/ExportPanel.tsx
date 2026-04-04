@@ -18,6 +18,18 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     const el = document.getElementById('cv-output');
     if (!el) throw new Error('CV preview not found');
     
+    // Collect all ancestors that might be hiding or clipping the CV
+    const hiddenAncestors: { el: HTMLElement; display: string }[] = [];
+    let ancestor = el.parentElement;
+    while (ancestor) {
+      const computed = window.getComputedStyle(ancestor);
+      if (computed.display === 'none') {
+        hiddenAncestors.push({ el: ancestor, display: ancestor.style.display });
+        ancestor.style.display = 'block';
+      }
+      ancestor = ancestor.parentElement;
+    }
+
     // Temporarily remove max-height/overflow constraints for full capture
     const parent = el.closest('.overflow-auto') as HTMLElement | null;
     const origStyles: { maxHeight: string; overflow: string } | null = parent ? {
@@ -31,6 +43,9 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     }
 
     try {
+      // Wait a frame for layout to settle after un-hiding
+      await new Promise(r => requestAnimationFrame(r));
+      
       const canvas = await html2canvas(el, {
         scale,
         useCORS: true,
@@ -47,6 +62,10 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       if (parent && origStyles) {
         parent.style.maxHeight = origStyles.maxHeight;
         parent.style.overflow = origStyles.overflow;
+      }
+      // Restore hidden ancestors
+      for (const item of hiddenAncestors) {
+        item.el.style.display = item.display;
       }
     }
   }, []);
