@@ -712,7 +712,7 @@ const GradientHeaderTemplate = ({ data, color, fontFamily, animated, showPhoto, 
       </Wrap>
 
       <div className="p-8">
-        {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><p className="text-xs leading-relaxed text-gray-600 border-l-3 pl-4" style={{ borderLeft: `3px solid ${color}` }}>{p.summary}</p></Wrap>}
+        {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><SectionTitle icon={UserCircle} title="About Me" color={color} /><p className="text-xs leading-relaxed text-gray-600 border-l-3 pl-4" style={{ borderLeft: `3px solid ${color}` }}>{p.summary}</p></Wrap>}
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           {skills.length > 0 && (
