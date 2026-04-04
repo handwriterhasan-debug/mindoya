@@ -491,7 +491,7 @@ const InfographicTemplate = ({ data, color, fontFamily, animated, showPhoto, pho
           {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color }} />{p.location}</span>}
         </div>
       </Wrap>
-      {p.summary && <Wrap {...aProps(0.1)} className="mb-6 text-center"><p className="text-xs text-gray-500 leading-relaxed max-w-[450px] mx-auto">{p.summary}</p></Wrap>}
+      {p.summary && <Wrap {...aProps(0.1)} className="mb-6 text-center"><SectionTitle icon={UserCircle} title="About Me" color={color} /><p className="text-xs text-gray-500 leading-relaxed max-w-[450px] mx-auto">{p.summary}</p></Wrap>}
       {skills.length > 0 && (
         <Wrap {...aProps(0.2)} className="mb-6">
           <SectionTitle icon={Zap} title="Skills" color={color} />
