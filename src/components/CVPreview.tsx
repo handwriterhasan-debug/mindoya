@@ -595,7 +595,7 @@ const ClassicCorporate = ({ data, color, fontFamily, animated, showPhoto, photoR
         {p.jobTitle && <p className="text-sm text-gray-600 mt-1">{p.jobTitle}</p>}
         <div className="flex justify-center flex-wrap gap-x-4 mt-2 text-[11px] text-gray-600">{p.email && <span>{p.email}</span>}{p.phone && <span>{p.phone}</span>}{p.location && <span>{p.location}</span>}{p.website && <span>{p.website}</span>}</div>
       </Wrap>
-      {p.summary && <Wrap {...aProps(0.1)} className="mb-5"><p className="text-xs leading-relaxed text-gray-700">{p.summary}</p></Wrap>}
+      {p.summary && <Wrap {...aProps(0.1)} className="mb-5"><h3 className="text-sm font-bold uppercase tracking-wide border-b border-gray-300 pb-1 mb-3">About Me</h3><p className="text-xs leading-relaxed text-gray-700">{p.summary}</p></Wrap>}
       {experience.length > 0 && (
         <Wrap {...aProps(0.2)} className="mb-5">
           <h3 className="text-sm font-bold uppercase tracking-wide border-b border-gray-300 pb-1 mb-3">Professional Experience</h3>
