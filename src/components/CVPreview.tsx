@@ -229,7 +229,7 @@ const ModernTimeline = ({ data, color, fontFamily, animated, spacingClass, showP
         </div>
         <SocialsRow socials={socials} color={color} />
       </Wrap>
-      {p.summary && <Wrap {...aProps(0.15)} className={sectionSpacing}><p className="text-xs leading-relaxed text-gray-600">{p.summary}</p></Wrap>}
+      {p.summary && <Wrap {...aProps(0.15)} className={sectionSpacing}><SectionTitle icon={UserCircle} title="About Me" color={color} /><p className="text-xs leading-relaxed text-gray-600">{p.summary}</p></Wrap>}
       {experience.length > 0 && <Wrap {...aProps(0.2)} className={sectionSpacing}><SectionTitle icon={Briefcase} title="Experience" color={color} /><TimelineItems items={experience} color={color} animated={animated} type="experience" /></Wrap>}
       {education.length > 0 && <Wrap {...aProps(0.3)} className={sectionSpacing}><SectionTitle icon={GraduationCap} title="Education" color={color} /><TimelineItems items={education} color={color} animated={animated} type="education" /></Wrap>}
       <SkillsSection skills={skills} color={color} animated={animated} />
