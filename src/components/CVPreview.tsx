@@ -368,7 +368,7 @@ const MinimalSwiss = ({ data, color, fontFamily, animated, showPhoto, photoRadiu
         </div>
         <hr className="mt-4 border-gray-100" />
       </Wrap>
-      {p.summary && <Wrap {...aProps(0.1)} className="mb-8"><p className="text-xs leading-relaxed text-gray-500 max-w-[500px]">{p.summary}</p></Wrap>}
+      {p.summary && <Wrap {...aProps(0.1)} className="mb-8"><h3 className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-3 font-medium">About Me</h3><p className="text-xs leading-relaxed text-gray-500 max-w-[500px]">{p.summary}</p></Wrap>}
       {experience.length > 0 && (
         <Wrap {...aProps(0.2)} className="mb-8">
           <h3 className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-4 font-medium">Experience</h3>
