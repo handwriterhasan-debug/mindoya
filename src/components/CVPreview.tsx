@@ -337,7 +337,7 @@ const CreativeSplit = ({ data, color, fontFamily, animated, showPhoto, photoRadi
         <SocialsRow socials={socials} color="rgba(255,255,255,0.8)" />
       </div>
       <div className="flex-1 bg-white p-7 text-gray-900">
-        {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><p className="text-xs leading-relaxed text-gray-600">{p.summary}</p></Wrap>}
+        {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><h3 className="text-[10px] uppercase tracking-widest font-bold mb-2 opacity-80">About Me</h3><p className="text-xs leading-relaxed text-gray-600">{p.summary}</p></Wrap>}
         {experience.length > 0 && <Wrap {...aProps(0.2)} className="mb-6"><SectionTitle icon={Briefcase} title="Experience" color={color} /><TimelineItems items={experience} color={color} animated={animated} type="experience" /></Wrap>}
         {education.length > 0 && <Wrap {...aProps(0.3)} className="mb-6"><SectionTitle icon={GraduationCap} title="Education" color={color} /><TimelineItems items={education} color={color} animated={animated} type="education" /></Wrap>}
         <AchievementsSection achievements={achievements} color={color} animated={animated} />
