@@ -542,7 +542,7 @@ const MagazineTemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
         </div>
       </Wrap>
       <div className="px-8 pb-8">
-        {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><p className="text-sm leading-relaxed text-gray-600 font-light italic border-l-4 pl-4" style={{ borderColor: color }}>"{p.summary}"</p></Wrap>}
+        {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><h3 className="text-lg font-extrabold uppercase tracking-tight mb-3" style={{ color }}>About Me</h3><p className="text-sm leading-relaxed text-gray-600 font-light italic border-l-4 pl-4" style={{ borderColor: color }}>"{p.summary}"</p></Wrap>}
         {experience.length > 0 && (
           <Wrap {...aProps(0.2)} className="mb-6">
             <h3 className="text-lg font-extrabold uppercase tracking-tight mb-4" style={{ color }}>Experience</h3>
