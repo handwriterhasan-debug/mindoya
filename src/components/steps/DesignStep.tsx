@@ -47,6 +47,8 @@ const templates = [
   { name: 'Classic Corporate', value: 'classic', desc: 'ATS-friendly, traditional' },
   { name: 'Two Column', value: 'twocolumn', desc: 'Left info, right content' },
   { name: 'Gradient Header', value: 'gradient', desc: 'Bold gradient top band' },
+  { name: 'Sci-Fi Cyber', value: 'scifi', desc: 'Neon glow, dark futuristic' },
+  { name: 'Modern AI', value: 'modernai', desc: 'Elegant dark header, clean' },
 ];
 
 const photoStyles = [

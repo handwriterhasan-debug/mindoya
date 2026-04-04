@@ -746,6 +746,275 @@ const GradientHeaderTemplate = ({ data, color, fontFamily, animated, showPhoto, 
   );
 };
 
+// ======= NEW TEMPLATE: Sci-Fi CV =======
+const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadius }: any) => {
+  const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
+  const Wrap = animated ? motion.div : 'div' as any;
+  const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
+  const neonColor = '#00f0ff';
+  const bgDark = '#0a0e17';
+  const bgCard = '#111827';
+
+  return (
+    <div className="text-gray-200" style={{ fontFamily: "'Consolas', 'Courier New', monospace", backgroundColor: bgDark, backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(0,240,255,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,240,255,0.03) 0%, transparent 50%)' }}>
+      {/* Header with cyber grid */}
+      <Wrap {...aProps(0)} className="p-7 pb-5 relative" style={{ borderBottom: `1px solid ${neonColor}30` }}>
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `linear-gradient(${neonColor}20 1px, transparent 1px), linear-gradient(90deg, ${neonColor}20 1px, transparent 1px)`, backgroundSize: '20px 20px' }} />
+        <div className="flex items-center gap-5 relative z-10">
+          {showPhoto && (
+            <div className="w-20 h-20 overflow-hidden shrink-0 relative" style={{ borderRadius: photoRadius, border: `2px solid ${neonColor}`, boxShadow: `0 0 20px ${neonColor}40, inset 0 0 20px ${neonColor}10` }}>
+              <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold tracking-wider uppercase" style={{ color: neonColor, textShadow: `0 0 10px ${neonColor}50` }}>{p.fullName || 'Your Name'}</h1>
+            {p.jobTitle && <p className="text-xs text-gray-400 mt-1 tracking-widest uppercase">{p.jobTitle}</p>}
+            <div className="flex flex-wrap gap-3 mt-2.5 text-[10px] text-gray-400">
+              {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" style={{ color: neonColor }} />{p.email}</span>}
+              {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" style={{ color: neonColor }} />{p.phone}</span>}
+              {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color: neonColor }} />{p.location}</span>}
+            </div>
+          </div>
+        </div>
+        <SocialsRow socials={socials} color={neonColor} />
+      </Wrap>
+
+      <div className="p-7 space-y-6">
+        {p.summary && (
+          <Wrap {...aProps(0.1)} className="p-4 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${neonColor}15` }}>
+            <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-2 flex items-center gap-2" style={{ color: neonColor }}>
+              <Rocket className="w-3.5 h-3.5" /> SYSTEM::ABOUT_ME
+            </h3>
+            <p className="text-[11px] text-gray-400 leading-relaxed">{p.summary}</p>
+          </Wrap>
+        )}
+
+        {skills.length > 0 && (
+          <Wrap {...aProps(0.2)}>
+            <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3 flex items-center gap-2" style={{ color: neonColor }}>
+              <Zap className="w-3.5 h-3.5" /> SKILL_MATRIX
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {skills.map((s: any, i: number) => (
+                <div key={s.id} className="p-2.5 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${neonColor}10` }}>
+                  <div className="flex justify-between text-[10px] mb-1.5">
+                    <span className="font-medium text-gray-300">{s.name}</span>
+                    <span style={{ color: neonColor }}>{s.level}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-gray-800 overflow-hidden">
+                    <motion.div className="h-full rounded-full" style={{ backgroundColor: neonColor, boxShadow: `0 0 6px ${neonColor}60` }}
+                      initial={animated ? { width: 0 } : { width: `${s.level}%` }}
+                      animate={{ width: `${s.level}%` }}
+                      transition={{ duration: 0.8, delay: 0.3 + i * 0.08 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Wrap>
+        )}
+
+        {experience.length > 0 && (
+          <Wrap {...aProps(0.3)}>
+            <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3 flex items-center gap-2" style={{ color: neonColor }}>
+              <Briefcase className="w-3.5 h-3.5" /> EXPERIENCE_LOG
+            </h3>
+            <div className="space-y-3 ml-3 border-l" style={{ borderColor: neonColor + '30' }}>
+              {experience.map((exp: any) => (
+                <div key={exp.id} className="pl-4 relative">
+                  <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full" style={{ backgroundColor: neonColor, boxShadow: `0 0 8px ${neonColor}` }} />
+                  <h4 className="font-bold text-sm text-gray-200">{exp.position}</h4>
+                  <p className="text-[11px]" style={{ color: neonColor }}>{exp.company}</p>
+                  <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                    <Calendar className="w-2.5 h-2.5" />
+                    {formatDate(exp.startDate)} — {exp.current ? 'Active' : formatDate(exp.endDate)}
+                  </p>
+                  {exp.description && <p className="text-[10px] text-gray-400 mt-1.5 leading-relaxed whitespace-pre-line">{exp.description}</p>}
+                </div>
+              ))}
+            </div>
+          </Wrap>
+        )}
+
+        {education.length > 0 && (
+          <Wrap {...aProps(0.35)}>
+            <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3 flex items-center gap-2" style={{ color: neonColor }}>
+              <GraduationCap className="w-3.5 h-3.5" /> EDUCATION_DATA
+            </h3>
+            {education.map((edu: any) => (
+              <div key={edu.id} className="mb-3 p-3 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${neonColor}10` }}>
+                <h4 className="font-bold text-sm text-gray-200">{edu.degree}{edu.field ? ` // ${edu.field}` : ''}</h4>
+                <p className="text-[11px]" style={{ color: neonColor }}>{edu.institution}</p>
+                <p className="text-[10px] text-gray-500">{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</p>
+              </div>
+            ))}
+          </Wrap>
+        )}
+
+        {languages.length > 0 && (
+          <Wrap {...aProps(0.4)}>
+            <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3" style={{ color: neonColor }}>LANGUAGES</h3>
+            <div className="flex flex-wrap gap-2">
+              {languages.map((l: any) => (
+                <span key={l.id} className="text-[10px] px-3 py-1 rounded-full" style={{ border: `1px solid ${neonColor}40`, color: neonColor, backgroundColor: `${neonColor}08` }}>
+                  {l.name} · {l.proficiency}
+                </span>
+              ))}
+            </div>
+          </Wrap>
+        )}
+
+        {hobbies.length > 0 && (
+          <Wrap {...aProps(0.45)}>
+            <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-2" style={{ color: neonColor }}>INTERESTS</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {hobbies.map((h) => (<span key={h} className="px-2.5 py-1 rounded text-[10px]" style={{ backgroundColor: `${neonColor}10`, color: neonColor, border: `1px solid ${neonColor}20` }}>{h}</span>))}
+            </div>
+          </Wrap>
+        )}
+
+        <AchievementsSection achievements={achievements} color={neonColor} animated={animated} />
+        <CustomSectionsRender customSections={customSections} color={neonColor} animated={animated} />
+      </div>
+    </div>
+  );
+};
+
+// ======= NEW TEMPLATE: Modern AI CV =======
+const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadius }: any) => {
+  const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
+  const Wrap = animated ? motion.div : 'div' as any;
+  const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
+  const bgMain = '#fafafa';
+  const accentDark = '#1a1a2e';
+
+  return (
+    <div style={{ fontFamily: "'DM Sans', 'Segoe UI', sans-serif", backgroundColor: bgMain }}>
+      {/* Elegant header with large photo circle */}
+      <Wrap {...aProps(0)} className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${accentDark}, #16213e)` }}>
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 70% 30%, rgba(255,255,255,0.15) 0%, transparent 60%)' }} />
+        <div className="p-8 pb-6 relative z-10 flex items-center gap-6">
+          {showPhoto && (
+            <div className="w-28 h-28 overflow-hidden shrink-0" style={{ borderRadius: '50%', border: '4px solid rgba(255,255,255,0.2)', boxShadow: '0 12px 40px rgba(0,0,0,0.3)' }}>
+              <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="text-white">
+            <h1 className="text-3xl font-extrabold tracking-tight">{p.fullName || 'Your Name'}</h1>
+            {p.jobTitle && <p className="text-sm opacity-80 mt-1 font-light tracking-wide">{p.jobTitle}</p>}
+            <div className="flex flex-wrap gap-3 mt-3 text-[10px] opacity-70">
+              {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{p.email}</span>}
+              {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
+              {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{p.location}</span>}
+              {p.website && <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{p.website}</span>}
+            </div>
+            <SocialsRow socials={socials} color="rgba(255,255,255,0.7)" />
+          </div>
+        </div>
+        {/* Subtle wave divider */}
+        <svg viewBox="0 0 1200 40" className="w-full" style={{ display: 'block', marginBottom: '-1px' }}>
+          <path d="M0,20 C300,40 600,0 1200,20 L1200,40 L0,40 Z" fill={bgMain} />
+        </svg>
+      </Wrap>
+
+      <div className="px-8 pb-8">
+        {p.summary && (
+          <Wrap {...aProps(0.1)} className="mb-7 -mt-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Cpu className="w-4 h-4" style={{ color: accentDark }} />
+              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: accentDark }}>About Me</h3>
+            </div>
+            <p className="text-[11px] text-gray-600 leading-relaxed pl-6">{p.summary}</p>
+          </Wrap>
+        )}
+
+        <div className="grid grid-cols-3 gap-6 mb-7">
+          <div className="col-span-2 space-y-6">
+            {experience.length > 0 && (
+              <Wrap {...aProps(0.2)}>
+                <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: accentDark }}>
+                  <Briefcase className="w-3.5 h-3.5" /> Experience
+                </h3>
+                {experience.map((exp: any) => (
+                  <div key={exp.id} className="mb-4 pb-3 border-b border-gray-100 last:border-0">
+                    <div className="flex justify-between items-baseline">
+                      <h4 className="font-bold text-sm text-gray-900">{exp.position}</h4>
+                      <span className="text-[9px] text-gray-400 shrink-0">{formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span>
+                    </div>
+                    <p className="text-[11px] font-semibold" style={{ color: accentDark }}>{exp.company}</p>
+                    {exp.description && <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed whitespace-pre-line">{exp.description}</p>}
+                  </div>
+                ))}
+              </Wrap>
+            )}
+
+            {education.length > 0 && (
+              <Wrap {...aProps(0.3)}>
+                <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: accentDark }}>
+                  <GraduationCap className="w-3.5 h-3.5" /> Education
+                </h3>
+                {education.map((edu: any) => (
+                  <div key={edu.id} className="mb-3">
+                    <h4 className="font-bold text-sm text-gray-900">{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</h4>
+                    <p className="text-[11px] font-semibold" style={{ color: accentDark }}>{edu.institution}</p>
+                    <p className="text-[10px] text-gray-400">{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</p>
+                  </div>
+                ))}
+              </Wrap>
+            )}
+          </div>
+
+          {/* Right sidebar */}
+          <div className="space-y-5">
+            {skills.length > 0 && (
+              <Wrap {...aProps(0.25)}>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: accentDark }}>Skills</h3>
+                {skills.map((s: any, i: number) => (
+                  <div key={s.id} className="mb-2.5">
+                    <div className="flex justify-between text-[10px] mb-1"><span className="font-medium text-gray-700">{s.name}</span><span className="text-gray-400">{s.level}%</span></div>
+                    <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                      <motion.div className="h-full rounded-full"
+                        style={{ background: `linear-gradient(90deg, ${accentDark}, #16213e)` }}
+                        initial={animated ? { width: 0 } : { width: `${s.level}%` }}
+                        animate={{ width: `${s.level}%` }}
+                        transition={{ duration: 0.8, delay: 0.3 + i * 0.08 }} />
+                    </div>
+                  </div>
+                ))}
+              </Wrap>
+            )}
+
+            {languages.length > 0 && (
+              <Wrap {...aProps(0.35)}>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: accentDark }}>Languages</h3>
+                {languages.map((l: any) => (
+                  <div key={l.id} className="mb-1.5 flex justify-between text-[10px]">
+                    <span className="text-gray-700">{l.name}</span>
+                    <span className="text-gray-400">{l.proficiency}</span>
+                  </div>
+                ))}
+              </Wrap>
+            )}
+
+            {hobbies.length > 0 && (
+              <Wrap {...aProps(0.4)}>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: accentDark }}>Interests</h3>
+                <div className="flex flex-wrap gap-1">
+                  {hobbies.map((h) => (
+                    <span key={h} className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{h}</span>
+                  ))}
+                </div>
+              </Wrap>
+            )}
+          </div>
+        </div>
+
+        <AchievementsSection achievements={achievements} color={accentDark} animated={animated} />
+        <CustomSectionsRender customSections={customSections} color={accentDark} animated={animated} />
+      </div>
+    </div>
+  );
+};
+
 // ======= MAIN COMPONENT =======
 
 const TEMPLATE_MAP: Record<string, React.ComponentType<any>> = {
@@ -759,6 +1028,8 @@ const TEMPLATE_MAP: Record<string, React.ComponentType<any>> = {
   classic: ClassicCorporate,
   twocolumn: TwoColumnTemplate,
   gradient: GradientHeaderTemplate,
+  scifi: SciFiTemplate,
+  modernai: ModernAITemplate,
 };
 
 const CVPreview = () => {
