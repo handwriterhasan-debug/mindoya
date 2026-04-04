@@ -420,7 +420,7 @@ const TechDeveloper = ({ data, color, fontFamily, animated, showPhoto, photoRadi
           {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#58a6ff]" />{p.location}</span>}
         </div>
       </Wrap>
-      {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><p className="text-xs leading-relaxed text-[#8b949e] border-l-2 border-[#58a6ff] pl-3">{p.summary}</p></Wrap>}
+      {p.summary && <Wrap {...aProps(0.1)} className="mb-6"><h3 className="text-[10px] uppercase tracking-widest font-bold mb-2 text-[#58a6ff]" style={{ fontFamily: monoFont }}>{'// About Me'}</h3><p className="text-xs leading-relaxed text-[#8b949e] border-l-2 border-[#58a6ff] pl-3">{p.summary}</p></Wrap>}
       {skills.length > 0 && (
         <Wrap {...aProps(0.2)} className="mb-6">
           <h3 className="text-[10px] uppercase tracking-widest font-bold mb-3 text-[#58a6ff]" style={{ fontFamily: monoFont }}>{'// Skills'}</h3>
