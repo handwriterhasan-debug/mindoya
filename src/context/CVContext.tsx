@@ -48,7 +48,7 @@ export const CVProvider: React.FC<CVProviderProps> = ({ children, initialData })
     return base;
   });
   const [step, setStep] = useState(0);
-  const [viewMode, setViewMode] = useState<'animated' | 'static'>('animated');
+  const [viewMode, setViewMode] = useState<'animated' | 'static'>('static');
   const [history, setHistory] = useState<CVData[]>([]);
   const [future, setFuture] = useState<CVData[]>([]);
   const autoSaveRef = useRef<NodeJS.Timeout>();
