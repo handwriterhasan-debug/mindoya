@@ -17,35 +17,43 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const captureCV = useCallback(async (scale = 2) => {
     const el = document.getElementById('cv-output');
     if (!el) throw new Error('CV preview not found');
-    
+
+    // Wait for all fonts and images to load
+    await document.fonts.ready;
+
+    // Force print color rendering on the element
+    el.style.setProperty('-webkit-print-color-adjust', 'exact');
+    el.style.setProperty('print-color-adjust', 'exact');
+
     // Collect all ancestors that might be hiding or clipping the CV
-    const hiddenAncestors: { el: HTMLElement; display: string }[] = [];
-    let ancestor = el.parentElement;
-    while (ancestor) {
+    const savedStyles: { el: HTMLElement; display: string; visibility: string; overflow: string; maxHeight: string; height: string; position: string }[] = [];
+    let ancestor: HTMLElement | null = el.parentElement;
+    while (ancestor && ancestor !== document.body) {
       const computed = window.getComputedStyle(ancestor);
-      if (computed.display === 'none') {
-        hiddenAncestors.push({ el: ancestor, display: ancestor.style.display });
-        ancestor.style.display = 'block';
+      const needsFix = computed.display === 'none' || computed.visibility === 'hidden' || computed.overflow === 'hidden' || computed.overflow === 'auto' || computed.overflow === 'scroll' || computed.maxHeight !== 'none';
+      if (needsFix) {
+        savedStyles.push({
+          el: ancestor,
+          display: ancestor.style.display,
+          visibility: ancestor.style.visibility,
+          overflow: ancestor.style.overflow,
+          maxHeight: ancestor.style.maxHeight,
+          height: ancestor.style.height,
+          position: ancestor.style.position,
+        });
+        if (computed.display === 'none') ancestor.style.display = 'block';
+        if (computed.visibility === 'hidden') ancestor.style.visibility = 'visible';
+        ancestor.style.overflow = 'visible';
+        ancestor.style.maxHeight = 'none';
       }
       ancestor = ancestor.parentElement;
     }
 
-    // Temporarily remove max-height/overflow constraints for full capture
-    const parent = el.closest('.overflow-auto') as HTMLElement | null;
-    const origStyles: { maxHeight: string; overflow: string } | null = parent ? {
-      maxHeight: parent.style.maxHeight,
-      overflow: parent.style.overflow,
-    } : null;
-    
-    if (parent) {
-      parent.style.maxHeight = 'none';
-      parent.style.overflow = 'visible';
-    }
-
     try {
-      // Wait a frame for layout to settle after un-hiding
+      // Wait for layout to settle
       await new Promise(r => requestAnimationFrame(r));
-      
+      await new Promise(r => setTimeout(r, 100));
+
       const canvas = await html2canvas(el, {
         scale,
         useCORS: true,
@@ -56,16 +64,27 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         height: el.scrollHeight,
         windowWidth: el.scrollWidth,
         windowHeight: el.scrollHeight,
+        onclone: (clonedDoc) => {
+          const clonedEl = clonedDoc.getElementById('cv-output');
+          if (clonedEl) {
+            clonedEl.style.setProperty('-webkit-print-color-adjust', 'exact');
+            clonedEl.style.setProperty('print-color-adjust', 'exact');
+            clonedEl.style.transform = 'none';
+            clonedEl.style.opacity = '1';
+            clonedEl.style.visibility = 'visible';
+          }
+        },
       });
       return canvas;
     } finally {
-      if (parent && origStyles) {
-        parent.style.maxHeight = origStyles.maxHeight;
-        parent.style.overflow = origStyles.overflow;
-      }
-      // Restore hidden ancestors
-      for (const item of hiddenAncestors) {
+      // Restore all saved styles
+      for (const item of savedStyles) {
         item.el.style.display = item.display;
+        item.el.style.visibility = item.visibility;
+        item.el.style.overflow = item.overflow;
+        item.el.style.maxHeight = item.maxHeight;
+        item.el.style.height = item.height;
+        item.el.style.position = item.position;
       }
     }
   }, []);
