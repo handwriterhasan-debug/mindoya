@@ -146,7 +146,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     el.style.transform = 'none';
     el.style.opacity = '1';
     el.style.visibility = 'visible';
-    el.style.background = '#ffffff';
+    // Don't override background - templates have their own backgrounds
     el.style.setProperty('-webkit-print-color-adjust', 'exact');
     el.style.setProperty('print-color-adjust', 'exact');
 
