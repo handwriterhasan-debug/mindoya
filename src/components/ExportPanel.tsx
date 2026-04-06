@@ -162,7 +162,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           scale: renderScale,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: '#ffffff',
+          backgroundColor: null,
           logging: false,
           width: targetWidth,
           height: targetHeight,
