@@ -1,6 +1,6 @@
 import { useCVContext } from '@/context/CVContext';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Globe, Calendar, Briefcase, GraduationCap, Zap, Globe2, Heart, Trophy, PenLine, UserCircle, Rocket, Cpu } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Calendar, Briefcase, GraduationCap, Zap, Globe2, Heart, Trophy, PenLine, UserCircle, Rocket, Cpu, Star } from 'lucide-react';
 import { getPlatformIcon } from '@/components/steps/SocialsStep';
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } };
@@ -884,96 +884,128 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
   const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
   const Wrap = animated ? motion.div : 'div' as any;
   const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
-  const bgMain = '#fafafa';
-  const accentDark = '#1a1a2e';
+  const accent = '#6366f1';
+  const accentLight = '#818cf8';
+  const bgDark = '#0f0f1a';
+  const bgCard = '#16162a';
+  const bgMain = '#f8f9fc';
+  const textMuted = '#94a3b8';
+
+  const SectionHeader = ({ icon: Icon, title }: { icon: any; title: string }) => (
+    <div className="flex items-center gap-2.5 mb-4">
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: accent + '15' }}>
+        <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+      </div>
+      <h3 className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>{title}</h3>
+      <div className="flex-1 h-px" style={{ backgroundColor: accent + '15' }} />
+    </div>
+  );
 
   return (
-    <div style={{ fontFamily: "'DM Sans', 'Segoe UI', sans-serif", backgroundColor: bgMain }}>
-      {/* Elegant header with large photo circle */}
-      <Wrap {...aProps(0)} className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${accentDark}, #16213e)` }}>
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 70% 30%, rgba(255,255,255,0.15) 0%, transparent 60%)' }} />
-        <div className="p-8 pb-6 relative z-10 flex items-center gap-6">
-          {showPhoto && (
-            <div className="w-28 h-28 overflow-hidden shrink-0" style={{ borderRadius: '50%', border: '4px solid rgba(255,255,255,0.2)', boxShadow: '0 12px 40px rgba(0,0,0,0.3)' }}>
-              <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
+    <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", backgroundColor: bgMain }}>
+      {/* Premium dark header - no radial gradients for export compatibility */}
+      <Wrap {...aProps(0)} style={{ background: `linear-gradient(160deg, ${bgDark} 0%, #1e1b4b 50%, ${bgDark} 100%)` }}>
+        <div className="p-8 pb-0">
+          <div className="flex items-start gap-6">
+            {showPhoto && p.profileImage && (
+              <div className="w-24 h-24 overflow-hidden shrink-0 relative" style={{ borderRadius: photoRadius || '16px', border: `2px solid ${accent}40` }}>
+                <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 rounded-[inherit]" style={{ boxShadow: `inset 0 0 0 1px ${accent}20` }} />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#22c55e', boxShadow: '0 0 6px #22c55e80' }} />
+                <span className="text-[9px] uppercase tracking-[0.2em] font-medium" style={{ color: '#22c55e' }}>Available for work</span>
+              </div>
+              <h1 className="text-[28px] font-extrabold tracking-tight text-white leading-tight">{p.fullName || 'Your Name'}</h1>
+              {p.jobTitle && (
+                <p className="text-sm font-medium mt-1" style={{ color: accentLight }}>{p.jobTitle}</p>
+              )}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+                {p.email && <span className="flex items-center gap-1.5 text-[10px]" style={{ color: textMuted }}><Mail className="w-3 h-3" style={{ color: accent }} />{p.email}</span>}
+                {p.phone && <span className="flex items-center gap-1.5 text-[10px]" style={{ color: textMuted }}><Phone className="w-3 h-3" style={{ color: accent }} />{p.phone}</span>}
+                {p.location && <span className="flex items-center gap-1.5 text-[10px]" style={{ color: textMuted }}><MapPin className="w-3 h-3" style={{ color: accent }} />{p.location}</span>}
+                {p.website && <span className="flex items-center gap-1.5 text-[10px]" style={{ color: textMuted }}><Globe className="w-3 h-3" style={{ color: accent }} />{p.website}</span>}
+              </div>
+              <SocialsRow socials={socials} color={textMuted} />
             </div>
-          )}
-          <div className="text-white">
-            <h1 className="text-3xl font-extrabold tracking-tight">{p.fullName || 'Your Name'}</h1>
-            {p.jobTitle && <p className="text-sm opacity-80 mt-1 font-light tracking-wide">{p.jobTitle}</p>}
-            <div className="flex flex-wrap gap-3 mt-3 text-[10px] opacity-70">
-              {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{p.email}</span>}
-              {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
-              {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{p.location}</span>}
-              {p.website && <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{p.website}</span>}
-            </div>
-            <SocialsRow socials={socials} color="rgba(255,255,255,0.7)" />
           </div>
         </div>
-        {/* Subtle wave divider */}
-        <svg viewBox="0 0 1200 40" className="w-full" style={{ display: 'block', marginBottom: '-1px' }}>
-          <path d="M0,20 C300,40 600,0 1200,20 L1200,40 L0,40 Z" fill={bgMain} />
-        </svg>
+        {/* Clean geometric divider */}
+        <div className="mt-6 flex">
+          <div className="h-1 flex-1" style={{ backgroundColor: accent }} />
+          <div className="h-1 w-20" style={{ backgroundColor: accentLight }} />
+          <div className="h-1 w-10" style={{ backgroundColor: '#22c55e' }} />
+        </div>
       </Wrap>
 
-      <div className="px-8 pb-8">
+      <div className="p-8 pt-6">
+        {/* About section as a card */}
         {p.summary && (
-          <Wrap {...aProps(0.1)} className="mb-7 -mt-1">
+          <Wrap {...aProps(0.1)} className="mb-6 p-4 rounded-xl" style={{ backgroundColor: accent + '08', border: `1px solid ${accent}15` }}>
             <div className="flex items-center gap-2 mb-2">
-              <Cpu className="w-4 h-4" style={{ color: accentDark }} />
-              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: accentDark }}>About Me</h3>
+              <Cpu className="w-3.5 h-3.5" style={{ color: accent }} />
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>About Me</h3>
             </div>
-            <p className="text-[11px] text-gray-600 leading-relaxed pl-6">{p.summary}</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: '#475569' }}>{p.summary}</p>
           </Wrap>
         )}
 
-        <div className="grid grid-cols-3 gap-6 mb-7">
+        <div className="grid grid-cols-3 gap-7">
+          {/* Main content - left 2 cols */}
           <div className="col-span-2 space-y-6">
             {experience.length > 0 && (
               <Wrap {...aProps(0.2)}>
-                <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: accentDark }}>
-                  <Briefcase className="w-3.5 h-3.5" /> Experience
-                </h3>
-                {experience.map((exp: any) => (
-                  <div key={exp.id} className="mb-4 pb-3 border-b border-gray-100 last:border-0">
-                    <div className="flex justify-between items-baseline">
-                      <h4 className="font-bold text-sm text-gray-900">{exp.position}</h4>
-                      <span className="text-[9px] text-gray-400 shrink-0">{formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span>
+                <SectionHeader icon={Briefcase} title="Experience" />
+                <div className="space-y-4 ml-1">
+                  {experience.map((exp: any, i: number) => (
+                    <div key={exp.id} className="relative pl-5" style={{ borderLeft: `2px solid ${i === 0 ? accent : accent + '25'}` }}>
+                      <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full" style={{ backgroundColor: i === 0 ? accent : accent + '60', border: i === 0 ? `2px solid ${accent}30` : 'none' }} />
+                      <div className="flex justify-between items-baseline mb-0.5">
+                        <h4 className="font-bold text-[13px] text-gray-900">{exp.position}</h4>
+                        <span className="text-[9px] font-medium px-2 py-0.5 rounded-full shrink-0 ml-2" style={{ backgroundColor: accent + '10', color: accent }}>{formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span>
+                      </div>
+                      <p className="text-[11px] font-semibold" style={{ color: accent }}>{exp.company}</p>
+                      {exp.description && <p className="text-[10px] mt-1.5 leading-relaxed whitespace-pre-line" style={{ color: '#64748b' }}>{exp.description}</p>}
                     </div>
-                    <p className="text-[11px] font-semibold" style={{ color: accentDark }}>{exp.company}</p>
-                    {exp.description && <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed whitespace-pre-line">{exp.description}</p>}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </Wrap>
             )}
 
             {education.length > 0 && (
               <Wrap {...aProps(0.3)}>
-                <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: accentDark }}>
-                  <GraduationCap className="w-3.5 h-3.5" /> Education
-                </h3>
-                {education.map((edu: any) => (
-                  <div key={edu.id} className="mb-3">
-                    <h4 className="font-bold text-sm text-gray-900">{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</h4>
-                    <p className="text-[11px] font-semibold" style={{ color: accentDark }}>{edu.institution}</p>
-                    <p className="text-[10px] text-gray-400">{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</p>
-                  </div>
-                ))}
+                <SectionHeader icon={GraduationCap} title="Education" />
+                <div className="space-y-3">
+                  {education.map((edu: any) => (
+                    <div key={edu.id} className="p-3 rounded-lg" style={{ backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0' }}>
+                      <h4 className="font-bold text-[12px] text-gray-900">{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</h4>
+                      <p className="text-[11px] font-medium" style={{ color: accent }}>{edu.institution}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: textMuted }}>{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</p>
+                    </div>
+                  ))}
+                </div>
               </Wrap>
             )}
           </div>
 
-          {/* Right sidebar */}
+          {/* Sidebar */}
           <div className="space-y-5">
             {skills.length > 0 && (
               <Wrap {...aProps(0.25)}>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: accentDark }}>Skills</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] mb-3 flex items-center gap-2" style={{ color: accent }}>
+                  <Star className="w-3 h-3" /> Skills
+                </h3>
                 {skills.map((s: any, i: number) => (
                   <div key={s.id} className="mb-2.5">
-                    <div className="flex justify-between text-[10px] mb-1"><span className="font-medium text-gray-700">{s.name}</span><span className="text-gray-400">{s.level}%</span></div>
-                    <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="font-medium text-gray-700">{s.name}</span>
+                      <span className="font-mono text-[9px]" style={{ color: accent }}>{s.level}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: accent + '12' }}>
                       <motion.div className="h-full rounded-full"
-                        style={{ background: `linear-gradient(90deg, ${accentDark}, #16213e)` }}
+                        style={{ backgroundColor: accent }}
                         initial={animated ? { width: 0 } : { width: `${s.level}%` }}
                         animate={{ width: `${s.level}%` }}
                         transition={{ duration: 0.8, delay: 0.3 + i * 0.08 }} />
@@ -985,11 +1017,11 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
 
             {languages.length > 0 && (
               <Wrap {...aProps(0.35)}>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: accentDark }}>Languages</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] mb-2.5" style={{ color: accent }}>Languages</h3>
                 {languages.map((l: any) => (
-                  <div key={l.id} className="mb-1.5 flex justify-between text-[10px]">
-                    <span className="text-gray-700">{l.name}</span>
-                    <span className="text-gray-400">{l.proficiency}</span>
+                  <div key={l.id} className="mb-2 flex items-center justify-between">
+                    <span className="text-[10px] font-medium text-gray-700">{l.name}</span>
+                    <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ backgroundColor: accent + '10', color: accent }}>{l.proficiency}</span>
                   </div>
                 ))}
               </Wrap>
@@ -997,10 +1029,10 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
 
             {hobbies.length > 0 && (
               <Wrap {...aProps(0.4)}>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: accentDark }}>Interests</h3>
-                <div className="flex flex-wrap gap-1">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] mb-2" style={{ color: accent }}>Interests</h3>
+                <div className="flex flex-wrap gap-1.5">
                   {hobbies.map((h) => (
-                    <span key={h} className="text-[9px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{h}</span>
+                    <span key={h} className="text-[9px] px-2.5 py-1 rounded-lg font-medium" style={{ backgroundColor: accent + '10', color: accent }}>{h}</span>
                   ))}
                 </div>
               </Wrap>
@@ -1008,8 +1040,8 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
           </div>
         </div>
 
-        <AchievementsSection achievements={achievements} color={accentDark} animated={animated} />
-        <CustomSectionsRender customSections={customSections} color={accentDark} animated={animated} />
+        <AchievementsSection achievements={achievements} color={accent} animated={animated} />
+        <CustomSectionsRender customSections={customSections} color={accent} animated={animated} />
       </div>
     </div>
   );
