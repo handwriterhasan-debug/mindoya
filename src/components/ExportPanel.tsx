@@ -192,8 +192,6 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
                 opacity: 1 !important;
                 visibility: visible !important;
                 transform: none !important;
-                filter: none !important;
-                background: #ffffff !important;
               }
             `;
             clonedDoc.head.appendChild(style);
@@ -207,8 +205,22 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
               clonedEl.style.opacity = '1';
               clonedEl.style.visibility = 'visible';
               clonedEl.style.transform = 'none';
-              clonedEl.style.filter = 'none';
-              clonedEl.style.background = '#ffffff';
+
+              // Sanitize radial-gradient backgrounds that cause html2canvas addColorStop errors
+              const allEls = clonedEl.querySelectorAll('*');
+              allEls.forEach((child) => {
+                const el = child as HTMLElement;
+                const bg = el.style.backgroundImage || '';
+                const computedBg = window.getComputedStyle(el).backgroundImage || '';
+                if (computedBg.includes('radial-gradient') || bg.includes('radial-gradient')) {
+                  el.style.backgroundImage = 'none';
+                }
+              });
+              // Also check the cv-output element itself
+              const cvBg = window.getComputedStyle(clonedEl).backgroundImage || '';
+              if (cvBg.includes('radial-gradient')) {
+                clonedEl.style.backgroundImage = 'none';
+              }
             }
           },
         });
