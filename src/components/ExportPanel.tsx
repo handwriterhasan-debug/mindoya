@@ -202,7 +202,7 @@ const isCanvasBlank = (canvas: HTMLCanvasElement) => {
     }
   }
 
-  return !hasVisiblePixel || true;
+  return !hasVisiblePixel;
 };
 
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
