@@ -9,9 +9,18 @@ import { toast } from '@/hooks/use-toast';
 
 const A4_WIDTH_PX = 794;
 const A4_HEIGHT_PX = 1123;
+const A4_EXPORT_WIDTH_PX = 2480;
+const A4_EXPORT_HEIGHT_PX = 3508;
 
-const waitForFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+const waitForFrame = (targetWindow: Window = window) =>
+  new Promise<void>((resolve) => targetWindow.requestAnimationFrame(() => resolve()));
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const waitForFonts = async (targetDocument: Document) => {
+  if ('fonts' in targetDocument && targetDocument.fonts) {
+    await targetDocument.fonts.ready;
+  }
+};
 
 const waitForImages = async (root: HTMLElement) => {
   const images = Array.from(root.querySelectorAll('img'));
@@ -29,27 +38,171 @@ const waitForImages = async (root: HTMLElement) => {
   );
 };
 
+const isTransparentColor = (value?: string | null) => {
+  if (!value) return true;
+  const normalized = value.replace(/\s+/g, '').toLowerCase();
+  return normalized === 'transparent' || normalized === 'rgba(0,0,0,0)';
+};
+
+const getCaptureTarget = () => {
+  const direct = document.getElementById('cv-output') as HTMLElement | null;
+  if (direct) {
+    return {
+      element: direct,
+      targetDocument: direct.ownerDocument,
+      targetWindow: direct.ownerDocument.defaultView || window,
+    };
+  }
+
+  const frames = Array.from(document.querySelectorAll('iframe'));
+  for (const frame of frames) {
+    try {
+      const frameDocument = frame.contentDocument;
+      const frameWindow = frame.contentWindow;
+      const frameElement = frameDocument?.getElementById('cv-output') as HTMLElement | null;
+
+      if (frameElement && frameDocument && frameWindow) {
+        return {
+          element: frameElement,
+          targetDocument: frameDocument,
+          targetWindow: frameWindow,
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error('CV preview not found');
+};
+
+const getEffectiveBackgroundColor = (root: HTMLElement, targetWindow: Window) => {
+  const candidates = [
+    root,
+    ...(root.firstElementChild instanceof HTMLElement ? [root.firstElementChild] : []),
+  ];
+
+  for (const candidate of candidates) {
+    const color = targetWindow.getComputedStyle(candidate).backgroundColor;
+    if (!isTransparentColor(color)) return color;
+  }
+
+  return '#ffffff';
+};
+
+const sanitizeExportTree = (
+  root: HTMLElement,
+  targetWindow: Window,
+  targetWidth: number,
+  targetHeight: number,
+  backgroundColor: string
+) => {
+  root.id = 'cv-output-export';
+  root.style.width = `${targetWidth}px`;
+  root.style.maxWidth = 'none';
+  root.style.minHeight = `${targetHeight}px`;
+  root.style.overflow = 'visible';
+  root.style.opacity = '1';
+  root.style.visibility = 'visible';
+  root.style.transform = 'none';
+  root.style.borderRadius = '0';
+  root.style.boxShadow = 'none';
+  root.style.backgroundColor = backgroundColor;
+  root.style.setProperty('-webkit-print-color-adjust', 'exact');
+  root.style.setProperty('print-color-adjust', 'exact');
+
+  const allElements = [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))];
+
+  allElements.forEach((node) => {
+    const computed = targetWindow.getComputedStyle(node);
+
+    node.style.animation = 'none';
+    node.style.transition = 'none';
+    node.style.caretColor = 'transparent';
+    node.style.contentVisibility = 'visible';
+    node.style.setProperty('-webkit-print-color-adjust', 'exact');
+    node.style.setProperty('print-color-adjust', 'exact');
+
+    const backgroundImage = computed.backgroundImage || '';
+    if (backgroundImage.includes('radial-gradient') || backgroundImage.includes('conic-gradient')) {
+      node.style.backgroundImage = 'none';
+    }
+
+    if (computed.backdropFilter && computed.backdropFilter !== 'none') {
+      node.style.backdropFilter = 'none';
+      node.style.setProperty('-webkit-backdrop-filter', 'none');
+    }
+
+    if (computed.filter && computed.filter !== 'none' && computed.filter.includes('blur')) {
+      node.style.filter = 'none';
+    }
+
+    if (computed.mixBlendMode && computed.mixBlendMode !== 'normal') {
+      node.style.mixBlendMode = 'normal';
+    }
+
+    if ((computed as CSSStyleDeclaration).maskImage && (computed as CSSStyleDeclaration).maskImage !== 'none') {
+      node.style.maskImage = 'none';
+    }
+  });
+};
+
+const createDetachedCaptureRoot = (
+  sourceElement: HTMLElement,
+  targetDocument: Document,
+  targetWindow: Window,
+  initialWidth: number
+) => {
+  const sandbox = targetDocument.createElement('div');
+  sandbox.setAttribute('data-export-sandbox', 'true');
+  sandbox.style.position = 'fixed';
+  sandbox.style.left = '-200vw';
+  sandbox.style.top = '0';
+  sandbox.style.width = `${initialWidth}px`;
+  sandbox.style.overflow = 'visible';
+  sandbox.style.opacity = '1';
+  sandbox.style.pointerEvents = 'none';
+  sandbox.style.zIndex = '-1';
+  sandbox.style.background = 'transparent';
+  sandbox.style.isolation = 'isolate';
+
+  const clone = sourceElement.cloneNode(true) as HTMLElement;
+  const backgroundColor = getEffectiveBackgroundColor(sourceElement, targetWindow);
+
+  sanitizeExportTree(clone, targetWindow, initialWidth, A4_HEIGHT_PX, backgroundColor);
+  sandbox.appendChild(clone);
+  targetDocument.body.appendChild(sandbox);
+
+  return { sandbox, clone, backgroundColor };
+};
+
 const isCanvasBlank = (canvas: HTMLCanvasElement) => {
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return false;
 
   const columns = 16;
   const rows = 24;
+  let hasVisiblePixel = false;
 
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < columns; col += 1) {
       const x = Math.min(canvas.width - 1, Math.floor((canvas.width - 1) * (col / Math.max(columns - 1, 1))));
       const y = Math.min(canvas.height - 1, Math.floor((canvas.height - 1) * (row / Math.max(rows - 1, 1))));
       const [r, g, b, a] = ctx.getImageData(x, y, 1, 1).data;
+      const isTransparentPixel = a === 0;
       const isWhitePixel = a > 0 && r > 245 && g > 245 && b > 245;
 
-      if (!isWhitePixel) {
+      if (!isTransparentPixel && !isWhitePixel) {
         return false;
+      }
+
+      if (!isTransparentPixel) {
+        hasVisiblePixel = true;
       }
     }
   }
 
-  return true;
+  return !hasVisiblePixel || true;
 };
 
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
@@ -66,108 +219,60 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       setViewMode('static');
       await waitForFrame();
       await waitForFrame();
-      await wait(80);
+      await wait(100);
     }
 
-    let el = document.getElementById('cv-output') as HTMLElement | null;
-    if (!el) throw new Error('CV preview not found');
+    const { element: sourceElement, targetDocument, targetWindow } = getCaptureTarget();
 
-    await document.fonts.ready;
-    await waitForImages(el);
+    await waitForFonts(targetDocument);
+    await waitForImages(sourceElement);
 
-    el = document.getElementById('cv-output') as HTMLElement | null;
-    if (!el) throw new Error('CV preview not found');
+    const initialWidth = Math.max(
+      A4_WIDTH_PX,
+      Math.round(sourceElement.getBoundingClientRect().width || parseFloat(sourceElement.style.width) || A4_WIDTH_PX)
+    );
 
-    const savedElementStyles = {
-      width: el.style.width,
-      maxWidth: el.style.maxWidth,
-      minHeight: el.style.minHeight,
-      overflow: el.style.overflow,
-      transform: el.style.transform,
-      opacity: el.style.opacity,
-      visibility: el.style.visibility,
-      background: el.style.background,
-      WebkitPrintColorAdjust: el.style.getPropertyValue('-webkit-print-color-adjust'),
-      printColorAdjust: el.style.getPropertyValue('print-color-adjust'),
-    };
-
-    const savedAncestors: Array<{
-      el: HTMLElement;
-      display: string;
-      visibility: string;
-      overflow: string;
-      maxHeight: string;
-      height: string;
-      opacity: string;
-      transform: string;
-      filter: string;
-      contain: string;
-      contentVisibility: string;
-    }> = [];
-
-    let ancestor = el.parentElement as HTMLElement | null;
-    while (ancestor && ancestor !== document.body) {
-      savedAncestors.push({
-        el: ancestor,
-        display: ancestor.style.display,
-        visibility: ancestor.style.visibility,
-        overflow: ancestor.style.overflow,
-        maxHeight: ancestor.style.maxHeight,
-        height: ancestor.style.height,
-        opacity: ancestor.style.opacity,
-        transform: ancestor.style.transform,
-        filter: ancestor.style.filter,
-        contain: ancestor.style.contain,
-        contentVisibility: ancestor.style.contentVisibility,
-      });
-
-      const computed = window.getComputedStyle(ancestor);
-      if (computed.display === 'none') ancestor.style.display = 'block';
-      if (computed.visibility === 'hidden') ancestor.style.visibility = 'visible';
-      ancestor.style.overflow = 'visible';
-      ancestor.style.maxHeight = 'none';
-      if (computed.height === '0px') ancestor.style.height = 'auto';
-      ancestor.style.opacity = '1';
-      ancestor.style.transform = 'none';
-      ancestor.style.filter = 'none';
-      ancestor.style.contain = 'none';
-      ancestor.style.contentVisibility = 'visible';
-
-      ancestor = ancestor.parentElement as HTMLElement | null;
-    }
-
-    const targetWidth = Math.max(el.scrollWidth, el.offsetWidth, A4_WIDTH_PX);
-    const targetHeight = Math.max(el.scrollHeight, el.offsetHeight, A4_HEIGHT_PX);
-
-    el.style.width = `${targetWidth}px`;
-    el.style.maxWidth = 'none';
-    el.style.minHeight = `${targetHeight}px`;
-    el.style.overflow = 'visible';
-    el.style.transform = 'none';
-    el.style.opacity = '1';
-    el.style.visibility = 'visible';
-    // Don't override background - templates have their own backgrounds
-    el.style.setProperty('-webkit-print-color-adjust', 'exact');
-    el.style.setProperty('print-color-adjust', 'exact');
+    const { sandbox, clone, backgroundColor } = createDetachedCaptureRoot(
+      sourceElement,
+      targetDocument,
+      targetWindow,
+      initialWidth
+    );
 
     try {
-      await waitForFrame();
-      await waitForFrame();
-      await wait(120);
-      await document.fonts.ready;
-      await waitForImages(el);
+      await waitForFonts(targetDocument);
+      await waitForImages(clone);
+      await waitForFrame(targetWindow);
+      await waitForFrame(targetWindow);
+      await wait(100);
+
+      const targetWidth = Math.max(A4_WIDTH_PX, Math.ceil(clone.scrollWidth || clone.offsetWidth || initialWidth));
+      clone.style.width = `${targetWidth}px`;
+      clone.style.maxWidth = 'none';
+
+      await waitForFrame(targetWindow);
+      await wait(60);
+
+      const targetHeight = Math.max(A4_HEIGHT_PX, Math.ceil(clone.scrollHeight || clone.offsetHeight || A4_HEIGHT_PX));
+      sanitizeExportTree(clone, targetWindow, targetWidth, targetHeight, backgroundColor);
+
+      await waitForFrame(targetWindow);
+      await wait(80);
+      await waitForFonts(targetDocument);
+      await waitForImages(clone);
 
       const renderCanvas = async (renderScale: number) => {
-        const canvas = await html2canvas(el as HTMLElement, {
+        const canvas = await html2canvas(clone, {
           scale: renderScale,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: null,
+          backgroundColor,
           logging: false,
+          foreignObjectRendering: false,
           width: targetWidth,
           height: targetHeight,
-          windowWidth: targetWidth,
-          windowHeight: targetHeight,
+          windowWidth: Math.max(targetWidth, targetWindow.innerWidth),
+          windowHeight: Math.max(targetHeight, targetWindow.innerHeight),
           scrollX: 0,
           scrollY: 0,
           onclone: (clonedDoc) => {
@@ -177,14 +282,11 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
                 animation: none !important;
                 transition: none !important;
                 caret-color: transparent !important;
-              }
-
-              #cv-output, #cv-output * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
 
-              #cv-output {
+              #cv-output-export {
                 width: ${targetWidth}px !important;
                 max-width: none !important;
                 min-height: ${targetHeight}px !important;
@@ -192,35 +294,16 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
                 opacity: 1 !important;
                 visibility: visible !important;
                 transform: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
               }
             `;
             clonedDoc.head.appendChild(style);
 
-            const clonedEl = clonedDoc.getElementById('cv-output') as HTMLElement | null;
-            if (clonedEl) {
-              clonedEl.style.width = `${targetWidth}px`;
-              clonedEl.style.maxWidth = 'none';
-              clonedEl.style.minHeight = `${targetHeight}px`;
-              clonedEl.style.overflow = 'visible';
-              clonedEl.style.opacity = '1';
-              clonedEl.style.visibility = 'visible';
-              clonedEl.style.transform = 'none';
-
-              // Sanitize radial-gradient backgrounds that cause html2canvas addColorStop errors
-              const allEls = clonedEl.querySelectorAll('*');
-              allEls.forEach((child) => {
-                const el = child as HTMLElement;
-                const bg = el.style.backgroundImage || '';
-                const computedBg = window.getComputedStyle(el).backgroundImage || '';
-                if (computedBg.includes('radial-gradient') || bg.includes('radial-gradient')) {
-                  el.style.backgroundImage = 'none';
-                }
-              });
-              // Also check the cv-output element itself
-              const cvBg = window.getComputedStyle(clonedEl).backgroundImage || '';
-              if (cvBg.includes('radial-gradient')) {
-                clonedEl.style.backgroundImage = 'none';
-              }
+            const exportRoot = clonedDoc.getElementById('cv-output-export') as HTMLElement | null;
+            if (exportRoot) {
+              exportRoot.style.backgroundColor = backgroundColor;
+              exportRoot.style.backgroundImage = exportRoot.style.backgroundImage || 'none';
             }
           },
         });
@@ -235,34 +318,12 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       }
 
       if (isCanvasBlank(canvas)) {
-        throw new Error('The CV export rendered blank. Please open Preview once and try again.');
+        throw new Error('The resume export is still rendering blank. Please open the preview, then try download again.');
       }
 
       return canvas;
     } finally {
-      el.style.width = savedElementStyles.width;
-      el.style.maxWidth = savedElementStyles.maxWidth;
-      el.style.minHeight = savedElementStyles.minHeight;
-      el.style.overflow = savedElementStyles.overflow;
-      el.style.transform = savedElementStyles.transform;
-      el.style.opacity = savedElementStyles.opacity;
-      el.style.visibility = savedElementStyles.visibility;
-      el.style.background = savedElementStyles.background;
-      el.style.setProperty('-webkit-print-color-adjust', savedElementStyles.WebkitPrintColorAdjust);
-      el.style.setProperty('print-color-adjust', savedElementStyles.printColorAdjust);
-
-      for (const item of savedAncestors) {
-        item.el.style.display = item.display;
-        item.el.style.visibility = item.visibility;
-        item.el.style.overflow = item.overflow;
-        item.el.style.maxHeight = item.maxHeight;
-        item.el.style.height = item.height;
-        item.el.style.opacity = item.opacity;
-        item.el.style.transform = item.transform;
-        item.el.style.filter = item.filter;
-        item.el.style.contain = item.contain;
-        item.el.style.contentVisibility = item.contentVisibility;
-      }
+      sandbox.remove();
 
       if (previousViewMode !== 'static') {
         setViewMode(previousViewMode);
@@ -270,15 +331,26 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     }
   }, [setViewMode, viewMode]);
 
-  const downloadBlob = (blob: Blob, name: string) => {
+  const downloadBlob = async (blob: Blob, name: string) => {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    await new Promise<void>((resolve) => {
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = name;
+      anchor.rel = 'noopener';
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
+
+      requestAnimationFrame(() => {
+        anchor.click();
+        window.setTimeout(() => {
+          document.body.removeChild(anchor);
+          URL.revokeObjectURL(url);
+          resolve();
+        }, 800);
+      });
+    });
   };
 
   const exportPDF = useCallback(async () => {
@@ -323,7 +395,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     setExporting('png');
 
     try {
-      const canvas = await captureCV(2);
+      const canvas = await captureCV(3);
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => {
           if (b) resolve(b);
@@ -331,7 +403,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         }, 'image/png');
       });
 
-      downloadBlob(blob, `${fileName}-cv.png`);
+      await downloadBlob(blob, `${fileName}-cv.png`);
       setDone(true);
       toast({ title: '🎉 PNG exported!', description: 'High quality PNG downloaded.' });
     } catch (err: any) {
@@ -348,29 +420,31 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
 
     try {
       const canvas = await captureCV(2);
-      const a4W = 1190;
-      const a4H = 1684;
-      const sc = document.createElement('canvas');
-      sc.width = a4W;
-      sc.height = a4H;
-      const ctx = sc.getContext('2d');
+      const screenshotCanvas = document.createElement('canvas');
+      screenshotCanvas.width = A4_EXPORT_WIDTH_PX;
+      screenshotCanvas.height = A4_EXPORT_HEIGHT_PX;
+      const ctx = screenshotCanvas.getContext('2d');
       if (!ctx) throw new Error('Canvas context unavailable');
 
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, a4W, a4H);
+      ctx.fillRect(0, 0, A4_EXPORT_WIDTH_PX, A4_EXPORT_HEIGHT_PX);
 
-      const canvasScale = Math.min(a4W / canvas.width, a4H / canvas.height);
-      const ox = (a4W - canvas.width * canvasScale) / 2;
-      ctx.drawImage(canvas, ox, 0, canvas.width * canvasScale, canvas.height * canvasScale);
+      const canvasScale = Math.min(A4_EXPORT_WIDTH_PX / canvas.width, A4_EXPORT_HEIGHT_PX / canvas.height);
+      const drawWidth = canvas.width * canvasScale;
+      const drawHeight = canvas.height * canvasScale;
+      const offsetX = (A4_EXPORT_WIDTH_PX - drawWidth) / 2;
+      const offsetY = 0;
+
+      ctx.drawImage(canvas, offsetX, offsetY, drawWidth, drawHeight);
 
       const blob = await new Promise<Blob>((resolve, reject) => {
-        sc.toBlob((b) => {
+        screenshotCanvas.toBlob((b) => {
           if (b) resolve(b);
           else reject(new Error('Failed to create screenshot blob'));
         }, 'image/png');
       });
 
-      downloadBlob(blob, `${fileName}-screenshot.png`);
+      await downloadBlob(blob, `${fileName}-screenshot.png`);
       setDone(true);
       toast({ title: '🎉 Screenshot exported!', description: 'A4-sized screenshot downloaded.' });
     } catch (err: any) {
