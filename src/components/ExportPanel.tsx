@@ -414,7 +414,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         canvas,
         targetWidth,
         targetHeight,
-        pageBreaks,
+        pageBreaks: pageBreaks.map((point) => Math.round(point * scale)),
         backgroundColor,
       };
     } finally {
@@ -517,16 +517,20 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
 
     try {
       const { canvas, backgroundColor } = await captureCV(2);
+      const screenshotHeight = Math.max(
+        A4_EXPORT_HEIGHT_PX,
+        Math.round((canvas.height * A4_EXPORT_WIDTH_PX) / canvas.width)
+      );
       const screenshotCanvas = document.createElement('canvas');
       screenshotCanvas.width = A4_EXPORT_WIDTH_PX;
-      screenshotCanvas.height = A4_EXPORT_HEIGHT_PX;
+      screenshotCanvas.height = screenshotHeight;
       const ctx = screenshotCanvas.getContext('2d');
       if (!ctx) throw new Error('Canvas context unavailable');
 
       ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, A4_EXPORT_WIDTH_PX, A4_EXPORT_HEIGHT_PX);
+      ctx.fillRect(0, 0, A4_EXPORT_WIDTH_PX, screenshotHeight);
 
-      const canvasScale = Math.min(A4_EXPORT_WIDTH_PX / canvas.width, A4_EXPORT_HEIGHT_PX / canvas.height);
+      const canvasScale = A4_EXPORT_WIDTH_PX / canvas.width;
       const drawWidth = canvas.width * canvasScale;
       const drawHeight = canvas.height * canvasScale;
       const offsetX = (A4_EXPORT_WIDTH_PX - drawWidth) / 2;
