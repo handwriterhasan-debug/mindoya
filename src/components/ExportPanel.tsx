@@ -492,7 +492,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     setExporting('png');
 
     try {
-      const { canvas } = await captureCV(3);
+      const { canvas } = await captureCV(2);
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => {
           if (b) resolve(b);
