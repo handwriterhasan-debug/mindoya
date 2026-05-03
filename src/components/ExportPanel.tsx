@@ -310,6 +310,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     await waitForImages(sourceElement);
 
     const initialWidth = Math.max(
+      MIN_EXPORT_WIDTH_PX,
       A4_WIDTH_PX,
       Math.round(sourceElement.getBoundingClientRect().width || parseFloat(sourceElement.style.width) || A4_WIDTH_PX)
     );
@@ -328,7 +329,11 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       await waitForFrame(targetWindow);
       await wait(100);
 
-      const targetWidth = Math.max(A4_WIDTH_PX, Math.ceil(clone.scrollWidth || clone.offsetWidth || initialWidth));
+      const targetWidth = Math.max(
+        MIN_EXPORT_WIDTH_PX,
+        A4_WIDTH_PX,
+        Math.ceil(clone.scrollWidth || clone.offsetWidth || initialWidth)
+      );
       clone.style.width = `${targetWidth}px`;
       clone.style.maxWidth = 'none';
 
@@ -337,6 +342,8 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
 
       const targetHeight = Math.max(A4_HEIGHT_PX, Math.ceil(clone.scrollHeight || clone.offsetHeight || A4_HEIGHT_PX));
       sanitizeExportTree(clone, targetWindow, targetWidth, targetHeight, backgroundColor);
+
+      const pageBreaks = collectSectionBreaks(clone, targetWindow);
 
       await waitForFrame(targetWindow);
       await wait(80);
@@ -356,7 +363,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           windowWidth: Math.max(targetWidth, targetWindow.innerWidth),
           windowHeight: Math.max(targetHeight, targetWindow.innerHeight),
           scrollX: 0,
-          scrollY: 0,
+          scrollY: -targetWindow.scrollY,
           onclone: (clonedDoc) => {
             const style = clonedDoc.createElement('style');
             style.textContent = `
@@ -403,7 +410,13 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         throw new Error('The resume export is still rendering blank. Please open the preview, then try download again.');
       }
 
-      return canvas;
+      return {
+        canvas,
+        targetWidth,
+        targetHeight,
+        pageBreaks,
+        backgroundColor,
+      };
     } finally {
       sandbox.remove();
 
@@ -440,26 +453,28 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     setExporting('pdf');
 
     try {
-      const canvas = await captureCV(2);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      const imgW = pdfW;
-      const imgH = (canvas.height * pdfW) / canvas.width;
-      const imgData = canvas.toDataURL('image/png');
+      const { canvas, pageBreaks } = await captureCV(2);
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageHeightPx = Math.round((canvas.width * PDF_PAGE_HEIGHT_MM) / PDF_PAGE_WIDTH_MM);
+      const slices = buildPdfSlices(canvas.height, pageHeightPx, pageBreaks);
 
-      let heightLeft = imgH;
-      let position = 0;
+      slices.forEach((slice, index) => {
+        if (index > 0) pdf.addPage();
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
-      heightLeft -= pdfH;
+        const pageCanvas = createPageCanvas(canvas, slice.startY, slice.height);
+        const pageHeightMm = (slice.height * PDF_PAGE_WIDTH_MM) / canvas.width;
 
-      while (heightLeft > 0) {
-        position -= pdfH;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
-        heightLeft -= pdfH;
-      }
+        pdf.addImage(
+          pageCanvas.toDataURL('image/png'),
+          'PNG',
+          0,
+          0,
+          PDF_PAGE_WIDTH_MM,
+          Math.min(PDF_PAGE_HEIGHT_MM, pageHeightMm),
+          undefined,
+          'FAST'
+        );
+      });
 
       pdf.save(`${fileName}-cv.pdf`);
       setDone(true);
@@ -477,7 +492,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     setExporting('png');
 
     try {
-      const canvas = await captureCV(3);
+      const { canvas } = await captureCV(3);
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => {
           if (b) resolve(b);
@@ -501,14 +516,14 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     setExporting('screenshot');
 
     try {
-      const canvas = await captureCV(2);
+      const { canvas, backgroundColor } = await captureCV(2);
       const screenshotCanvas = document.createElement('canvas');
       screenshotCanvas.width = A4_EXPORT_WIDTH_PX;
       screenshotCanvas.height = A4_EXPORT_HEIGHT_PX;
       const ctx = screenshotCanvas.getContext('2d');
       if (!ctx) throw new Error('Canvas context unavailable');
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, A4_EXPORT_WIDTH_PX, A4_EXPORT_HEIGHT_PX);
 
       const canvasScale = Math.min(A4_EXPORT_WIDTH_PX / canvas.width, A4_EXPORT_HEIGHT_PX / canvas.height);
