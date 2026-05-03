@@ -11,6 +11,9 @@ const A4_WIDTH_PX = 794;
 const A4_HEIGHT_PX = 1123;
 const A4_EXPORT_WIDTH_PX = 2480;
 const A4_EXPORT_HEIGHT_PX = 3508;
+const PDF_PAGE_WIDTH_MM = 210;
+const PDF_PAGE_HEIGHT_MM = 297;
+const MIN_EXPORT_WIDTH_PX = 1920;
 
 const waitForFrame = (targetWindow: Window = window) =>
   new Promise<void>((resolve) => targetWindow.requestAnimationFrame(() => resolve()));
@@ -203,6 +206,85 @@ const isCanvasBlank = (canvas: HTMLCanvasElement) => {
   }
 
   return !hasVisiblePixel;
+};
+
+const collectSectionBreaks = (clone: HTMLElement, targetWindow: Window) => {
+  const templateRoot = clone.firstElementChild instanceof HTMLElement ? clone.firstElementChild : clone;
+  const rootRect = clone.getBoundingClientRect();
+  const candidates = new Set<HTMLElement>();
+
+  const addChildren = (container: HTMLElement, depth: number) => {
+    Array.from(container.children).forEach((child) => {
+      if (!(child instanceof HTMLElement)) return;
+
+      const rect = child.getBoundingClientRect();
+      const computed = targetWindow.getComputedStyle(child);
+      const isFloating = computed.position === 'absolute' || computed.position === 'fixed';
+
+      if (!isFloating && rect.height >= 48) {
+        candidates.add(child);
+      }
+
+      const shouldDive =
+        depth < 1 &&
+        child.children.length > 1 &&
+        (computed.display.includes('flex') || computed.display.includes('grid') || rect.height > A4_HEIGHT_PX * 0.55);
+
+      if (shouldDive) {
+        addChildren(child, depth + 1);
+      }
+    });
+  };
+
+  addChildren(templateRoot, 0);
+
+  return Array.from(candidates)
+    .map((node) => Math.round(node.getBoundingClientRect().top - rootRect.top))
+    .filter((offset) => offset > 48 && offset < clone.scrollHeight - 48)
+    .sort((a, b) => a - b)
+    .filter((offset, index, values) => index === 0 || offset - values[index - 1] > 24);
+};
+
+const buildPdfSlices = (canvasHeight: number, pageHeightPx: number, pageBreaks: number[]) => {
+  const slices: Array<{ startY: number; height: number }> = [];
+  let startY = 0;
+
+  while (startY < canvasHeight) {
+    const remainingHeight = canvasHeight - startY;
+    if (remainingHeight <= pageHeightPx) {
+      slices.push({ startY, height: remainingHeight });
+      break;
+    }
+
+    const preferredEnd = startY + pageHeightPx;
+    const minBreak = startY + Math.floor(pageHeightPx * 0.72);
+    const maxBreak = startY + Math.floor(pageHeightPx * 1.04);
+
+    const bestBreak = pageBreaks
+      .filter((point) => point > minBreak && point < maxBreak)
+      .reduce<number | null>((best, point) => {
+        if (best === null) return point;
+        return Math.abs(point - preferredEnd) < Math.abs(best - preferredEnd) ? point : best;
+      }, null);
+
+    const endY = bestBreak && bestBreak - startY > 120 ? bestBreak : preferredEnd;
+    slices.push({ startY, height: endY - startY });
+    startY = endY;
+  }
+
+  return slices;
+};
+
+const createPageCanvas = (sourceCanvas: HTMLCanvasElement, startY: number, height: number) => {
+  const pageCanvas = document.createElement('canvas');
+  pageCanvas.width = sourceCanvas.width;
+  pageCanvas.height = height;
+
+  const ctx = pageCanvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context unavailable');
+
+  ctx.drawImage(sourceCanvas, 0, startY, sourceCanvas.width, height, 0, 0, sourceCanvas.width, height);
+  return pageCanvas;
 };
 
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
