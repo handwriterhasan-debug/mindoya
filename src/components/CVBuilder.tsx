@@ -314,6 +314,8 @@ const CVBuilder = ({ onGoHome, onOpenLibrary, onOpenPricing }: CVBuilderProps) =
         {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
       </AnimatePresence>
 
+      <AIToolsPanel open={showAI} onClose={() => setShowAI(false)} />
+
       <VorynixBadge />
     </div>
   );
