@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCVContext } from '@/context/CVContext';
+import { usePlan } from '@/context/PlanContext';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Palette, Loader2 } from 'lucide-react';
+import { User, Briefcase, GraduationCap, Zap, Globe2, Link, Star, Undo2, Redo2, Eye, Clapperboard, FileText, ChevronLeft, ChevronRight, Palette, Loader2, Save, Library as LibraryIcon, Sparkles, Crown, MoreHorizontal } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import PersonalInfoStep from '@/components/steps/PersonalInfoStep';
 import ExperienceStep from '@/components/steps/ExperienceStep';
@@ -15,6 +16,8 @@ import DesignStep from '@/components/steps/DesignStep';
 import CVPreview from '@/components/CVPreview';
 import ExportPanel from '@/components/ExportPanel';
 import VorynixBadge from '@/components/VorynixBadge';
+import AIToolsPanel from '@/components/AIToolsPanel';
+import { toast } from '@/hooks/use-toast';
 
 const steps = [
   { label: 'Personal', icon: User, component: PersonalInfoStep },
@@ -27,10 +30,19 @@ const steps = [
   { label: 'Design', icon: Palette, component: DesignStep },
 ];
 
-const CVBuilder = ({ onGoHome }: { onGoHome?: () => void }) => {
-  const { step, setStep, viewMode, setViewMode, undo, redo, canUndo, canRedo } = useCVContext();
+interface CVBuilderProps {
+  onGoHome?: () => void;
+  onOpenLibrary?: () => void;
+  onOpenPricing?: () => void;
+}
+
+const CVBuilder = ({ onGoHome, onOpenLibrary, onOpenPricing }: CVBuilderProps) => {
+  const { step, setStep, viewMode, setViewMode, undo, redo, canUndo, canRedo, data, libraryCVId, setLibraryCVId } = useCVContext();
+  const { saveCV, plan, openUpgrade } = usePlan();
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const tabBarRef = useRef<HTMLDivElement>(null);
   const CurrentStep = steps[step].component;
 
