@@ -1,6 +1,8 @@
 import { useCVContext } from '@/context/CVContext';
+import { usePlan, FREE_TEMPLATES, PREMIUM_TEMPLATES } from '@/context/PlanContext';
 import { motion } from 'framer-motion';
-import { Palette, Type, Layout, Image, Maximize } from 'lucide-react';
+import { Palette, Type, Layout, Image, Maximize, Lock, Crown } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const colorThemes = [
   { name: 'Purple', value: '#6C5CE7' },
@@ -77,10 +79,21 @@ const fontPreviewStyle: Record<string, React.CSSProperties> = {
 
 const DesignStep = () => {
   const { data, updateData } = useCVContext();
+  const { isTemplateLocked, openUpgrade, plan } = usePlan();
   const design = data.design;
 
   const update = (field: string, value: string) => {
     updateData('design', { ...design, [field]: value });
+  };
+
+  const handleTemplate = (value: string) => {
+    if (isTemplateLocked(value)) {
+      const reason = PREMIUM_TEMPLATES.includes(value) ? 'Premium' : 'Pro';
+      toast({ title: `🔒 ${reason} template`, description: `Upgrade to ${reason} to unlock this design.` });
+      openUpgrade('template');
+      return;
+    }
+    update('template', value);
   };
 
   return (
@@ -91,21 +104,36 @@ const DesignStep = () => {
           <Layout className="w-3.5 h-3.5 text-primary" /> Template
         </label>
         <div className="grid grid-cols-2 gap-2.5">
-          {templates.map(t => (
-            <button
-              key={t.value}
-              onClick={() => update('template', t.value)}
-              className={`p-3.5 rounded-xl text-left transition-all active:scale-[0.97] ${
-                design.template === t.value
-                  ? 'ring-2 ring-primary bg-accent shadow-md'
-                  : 'bg-[hsl(var(--ios-input-bg))] hover:bg-secondary'
-              }`}
-            >
-              <span className="font-heading font-bold text-xs block">{t.name}</span>
-              <span className="text-[10px] text-muted-foreground leading-tight">{t.desc}</span>
-            </button>
-          ))}
+          {templates.map(t => {
+            const locked = isTemplateLocked(t.value);
+            const isPremium = PREMIUM_TEMPLATES.includes(t.value);
+            return (
+              <button
+                key={t.value}
+                onClick={() => handleTemplate(t.value)}
+                className={`relative p-3.5 rounded-xl text-left transition-all active:scale-[0.97] ${
+                  design.template === t.value
+                    ? 'ring-2 ring-primary bg-accent shadow-md'
+                    : 'bg-[hsl(var(--ios-input-bg))] hover:bg-secondary'
+                } ${locked ? 'opacity-70' : ''}`}
+              >
+                {locked && (
+                  <span className={`absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isPremium ? 'bg-gradient-to-r from-amber-500 to-pink-500 text-white' : 'bg-foreground/80 text-background'}`}>
+                    {isPremium ? <Crown className="w-2.5 h-2.5" /> : <Lock className="w-2.5 h-2.5" />}
+                    {isPremium ? 'Premium' : 'Pro'}
+                  </span>
+                )}
+                <span className="font-heading font-bold text-xs block pr-12">{t.name}</span>
+                <span className="text-[10px] text-muted-foreground leading-tight">{t.desc}</span>
+              </button>
+            );
+          })}
         </div>
+        {plan === 'free' && (
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Free plan unlocks 3 starter templates. Upgrade for the rest.
+          </p>
+        )}
       </div>
 
       {/* Colors */}

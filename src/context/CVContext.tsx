@@ -15,6 +15,8 @@ interface CVContextType {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  libraryCVId: string | null;
+  setLibraryCVId: (id: string | null) => void;
 }
 
 const CVContext = createContext<CVContextType | null>(null);
@@ -28,10 +30,14 @@ export const useCVContext = () => {
 interface CVProviderProps {
   children: React.ReactNode;
   initialData?: { fullName?: string; age?: string; country?: string; email?: string } | null;
+  loadedCV?: CVData;
+  loadedCVId?: string | null;
 }
 
-export const CVProvider: React.FC<CVProviderProps> = ({ children, initialData }) => {
+export const CVProvider: React.FC<CVProviderProps> = ({ children, initialData, loadedCV, loadedCVId }) => {
+  const [libraryCVId, setLibraryCVId] = useState<string | null>(loadedCVId ?? null);
   const [data, setData] = useState<CVData>(() => {
+    if (loadedCV) return loadedCV;
     const saved = localStorage.getItem('mindoya-cv');
     const base = saved ? JSON.parse(saved) : defaultCVData;
     if (initialData) {
@@ -98,6 +104,7 @@ export const CVProvider: React.FC<CVProviderProps> = ({ children, initialData })
       history, undo, redo,
       canUndo: history.length > 0,
       canRedo: future.length > 0,
+      libraryCVId, setLibraryCVId,
     }}>
       {children}
     </CVContext.Provider>
