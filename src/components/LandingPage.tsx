@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Sparkles, FileText, Zap, Globe, Instagram, ArrowLeft, User, MapPin, Mail, Calendar } from 'lucide-react';
+import { ArrowRight, Sparkles, FileText, Zap, Globe, Instagram, ArrowLeft, User, MapPin, Mail, Calendar, Library as LibraryIcon, Crown } from 'lucide-react';
 import VorynixBadge from '@/components/VorynixBadge';
+import { usePlan } from '@/context/PlanContext';
 
 interface OnboardingData {
   fullName: string;
@@ -13,9 +14,16 @@ interface OnboardingData {
   email: string;
 }
 
-const LandingPage = ({ onStart }: { onStart: (data?: OnboardingData) => void }) => {
+interface LandingPageProps {
+  onStart: (data?: OnboardingData) => void;
+  onOpenLibrary?: () => void;
+  onOpenPricing?: () => void;
+}
+
+const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [form, setForm] = useState<OnboardingData>({ fullName: '', age: '', country: '', email: '' });
+  const { library, plan } = usePlan();
 
   const handleSubmit = () => {
     if (!form.fullName.trim()) return;
@@ -25,11 +33,29 @@ const LandingPage = ({ onStart }: { onStart: (data?: OnboardingData) => void }) 
   return (
     <div className="min-h-screen mesh-gradient overflow-auto">
       {/* Nav */}
-      <nav className="container flex items-center justify-between py-4 px-4">
-        <h1 className="font-heading font-extrabold text-2xl gradient-text">Mindoya</h1>
-        <Button onClick={() => setShowOnboarding(true)} className="gradient-primary text-primary-foreground btn-press glow-primary-sm">
-          Build CV <ArrowRight className="w-4 h-4 ml-1" />
-        </Button>
+      <nav className="container flex items-center justify-between py-4 px-4 gap-2">
+        <h1 className="font-heading font-extrabold text-xl sm:text-2xl gradient-text">Mindoya</h1>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {onOpenPricing && (
+            <Button onClick={onOpenPricing} variant="ghost" size="sm" className="h-9 text-xs px-2.5 hidden sm:inline-flex">
+              <Crown className="w-3.5 h-3.5 mr-1" /> Pricing
+            </Button>
+          )}
+          {onOpenLibrary && (
+            <Button onClick={onOpenLibrary} variant="outline" size="sm" className="h-9 text-xs px-2.5">
+              <LibraryIcon className="w-3.5 h-3.5 sm:mr-1" />
+              <span className="hidden sm:inline">Library</span>
+              {library.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">
+                  {library.length}
+                </span>
+              )}
+            </Button>
+          )}
+          <Button onClick={() => setShowOnboarding(true)} size="sm" className="h-9 gradient-primary text-primary-foreground btn-press glow-primary-sm text-xs px-3">
+            Build CV <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </div>
       </nav>
 
       <AnimatePresence mode="wait">
