@@ -187,7 +187,7 @@ const CVBuilder = ({ onGoHome, onOpenLibrary, onOpenPricing }: CVBuilderProps) =
                 )}
                 {onOpenPricing && (
                   <Button variant="outline" size="sm" className="h-9 text-xs justify-start" onClick={() => { onOpenPricing(); setShowMobileMenu(false); }}>
-                    <planIcon className="w-3.5 h-3.5 mr-1.5" /> {plan === 'free' ? 'Upgrade' : plan}
+                    <PlanIcon className="w-3.5 h-3.5 mr-1.5" /> {plan === 'free' ? 'Upgrade' : plan}
                   </Button>
                 )}
                 <Button variant="outline" size="sm" className="h-9 text-xs justify-start" onClick={() => { undo(); setShowMobileMenu(false); }} disabled={!canUndo}>
