@@ -86,7 +86,7 @@ const CVBuilder = ({ onGoHome, onOpenLibrary, onOpenPricing }: CVBuilderProps) =
     toast({ title: '💾 CV saved to your library', duration: 2200 });
   }, [data, libraryCVId, saveCV, plan, openUpgrade, setLibraryCVId]);
 
-  const planIcon = plan === 'premium' ? Crown : Sparkles;
+  const PlanIcon = plan === 'premium' ? Crown : Sparkles;
 
   return (
     <div className="min-h-screen bg-[hsl(var(--ios-bg))]">
