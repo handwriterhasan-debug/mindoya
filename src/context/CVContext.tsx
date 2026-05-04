@@ -104,6 +104,7 @@ export const CVProvider: React.FC<CVProviderProps> = ({ children, initialData, l
       history, undo, redo,
       canUndo: history.length > 0,
       canRedo: future.length > 0,
+      libraryCVId, setLibraryCVId,
     }}>
       {children}
     </CVContext.Provider>
