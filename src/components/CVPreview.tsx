@@ -690,13 +690,14 @@ const GradientHeaderTemplate = ({ data, color, fontFamily, animated, showPhoto, 
   const Wrap = animated ? motion.div : 'div' as any;
   const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
 
-  // Create a lighter version for gradient
-  const lighterColor = hexToRgba(color, 0.8);
+  // Create safe rgba versions for gradients - avoids html2canvas "addColorStop non-finite" crash
+  const safeMainColor = hexToRgba(color, 1.0);
+  const lighterColor = hexToRgba(color, 0.75);
 
   return (
     <div className="bg-white text-gray-900" style={{ fontFamily }}>
       {/* Gradient header */}
-      <Wrap {...aProps(0)} className="p-8 pb-6 text-white" style={{ background: `linear-gradient(135deg, ${color}, ${lighterColor})` }}>
+      <Wrap {...aProps(0)} className="p-8 pb-6 text-white" style={{ background: `linear-gradient(135deg, ${safeMainColor}, ${lighterColor})` }}>
         <div className="flex items-center gap-5">
           {showPhoto && <div className="w-24 h-24 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, border: '3px solid rgba(255,255,255,0.4)', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}><img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" /></div>}
           <div>
@@ -723,7 +724,7 @@ const GradientHeaderTemplate = ({ data, color, fontFamily, animated, showPhoto, 
                 {skills.map((s: any) => (
                   <div key={s.id}>
                     <div className="flex justify-between text-[10px] mb-0.5"><span className="font-medium">{s.name}</span><span className="text-gray-400">{s.level}%</span></div>
-                    <div className="h-2 rounded-full bg-gray-100"><div className="h-full rounded-full" style={{ width: `${s.level}%`, background: `linear-gradient(90deg, ${color}, ${lighterColor})` }} /></div>
+                    <div className="h-2 rounded-full bg-gray-100"><div className="h-full rounded-full" style={{ width: `${s.level}%`, background: `linear-gradient(90deg, ${safeMainColor}, ${lighterColor})` }} /></div>
                   </div>
                 ))}
               </div>
