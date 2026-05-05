@@ -2,6 +2,7 @@ import { useCVContext } from '@/context/CVContext';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Globe, Calendar, Briefcase, GraduationCap, Zap, Globe2, Heart, Trophy, PenLine, UserCircle, Rocket, Cpu, Star } from 'lucide-react';
 import { getPlatformIcon } from '@/components/steps/SocialsStep';
+import { hexToRgba } from '@/lib/color';
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } };
 
@@ -50,7 +51,7 @@ const SocialsRow = ({ socials, color }: { socials: any[]; color: string }) => (
 );
 
 const SectionTitle = ({ icon: Icon, title, color }: { icon: any; title: string; color: string }) => (
-  <div className="flex items-center gap-2 mb-3 pb-1.5 border-b" style={{ borderColor: color + '20' }}>
+  <div className="flex items-center gap-2 mb-3 pb-1.5 border-b" style={{ borderColor: hexToRgba(color, 0.125) }}>
     <Icon className="w-3.5 h-3.5" style={{ color }} />
     <h3 className="font-bold text-[11px] uppercase tracking-widest" style={{ color }}>{title}</h3>
   </div>
@@ -60,7 +61,7 @@ const TimelineItems = ({ items, color, animated, type }: { items: any[]; color: 
   const Wrap = animated ? motion.div : 'div' as any;
   const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
   return (
-    <div className="space-y-4 ml-3 border-l-2 pl-5" style={{ borderColor: color + '25' }}>
+    <div className="space-y-4 ml-3 border-l-2 pl-5" style={{ borderColor: hexToRgba(color, 0.145) }}>
       {items.map((item: any, i: number) => (
         <Wrap key={item.id} {...aProps(0.05 * i)}>
           <div className="relative">
@@ -158,7 +159,7 @@ const HobbiesSection = ({ hobbies, color, animated }: { hobbies: string[]; color
       <SectionTitle icon={Heart} title="Hobbies & Interests" color={color} />
       <div className="flex flex-wrap gap-1.5">
         {hobbies.map((h) => (
-          <span key={h} className="px-2.5 py-1 rounded-full text-[10px] font-medium border" style={{ borderColor: color + '25', color }}>{h}</span>
+          <span key={h} className="px-2.5 py-1 rounded-full text-[10px] font-medium border" style={{ borderColor: hexToRgba(color, 0.145), color }}>{h}</span>
         ))}
       </div>
     </Wrap>
@@ -174,7 +175,7 @@ const AchievementsSection = ({ achievements, color, animated }: { achievements: 
       <SectionTitle icon={Trophy} title="Achievements" color={color} />
       <div className="space-y-2">
         {achievements.map((a: any) => (
-          <div key={a.id} className="p-3 rounded-lg border" style={{ borderColor: color + '15', backgroundColor: color + '05' }}>
+          <div key={a.id} className="p-3 rounded-lg border" style={{ borderColor: hexToRgba(color, 0.082), backgroundColor: hexToRgba(color, 0.02) }}>
             <div className="flex items-center gap-1.5 mb-1">
               <Trophy className="w-3 h-3" style={{ color }} />
               <span className="font-bold text-[11px] text-gray-900">{a.title}</span>
@@ -214,10 +215,10 @@ const ModernTimeline = ({ data, color, fontFamily, animated, spacingClass, showP
 
   return (
     <div className={`bg-white text-gray-900 ${padding}`} style={{ fontFamily }}>
-      <Wrap {...aProps(0)} className={sectionSpacing} style={{ borderBottom: `2px solid ${color}15`, paddingBottom: '20px' }}>
+      <Wrap {...aProps(0)} className={sectionSpacing} style={{ borderBottom: `2px solid ${hexToRgba(color, 0.082)}`, paddingBottom: '20px' }}>
         <div className="flex items-center gap-5">
           {showPhoto && (
-            <div className="w-20 h-20 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, boxShadow: `0 0 0 3px ${color}, 0 4px 16px ${color}25` }}>
+            <div className="w-20 h-20 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, boxShadow: `0 0 0 3px ${color}, 0 4px 16px ${hexToRgba(color, 0.145)}` }}>
               <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
             </div>
           )}
@@ -643,7 +644,7 @@ const TwoColumnTemplate = ({ data, color, fontFamily, animated, showPhoto, photo
 
       <div className="flex">
         {/* Left column - 35% */}
-        <div className="w-[35%] p-5 border-r" style={{ borderColor: color + '15', backgroundColor: color + '05' }}>
+        <div className="w-[35%] p-5 border-r" style={{ borderColor: hexToRgba(color, 0.082), backgroundColor: hexToRgba(color, 0.02) }}>
           {p.summary && <Wrap {...aProps(0.1)} className="mb-5"><h3 className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color }}>About</h3><p className="text-[11px] text-gray-600 leading-relaxed">{p.summary}</p></Wrap>}
           {skills.length > 0 && (
             <Wrap {...aProps(0.2)} className="mb-5">
@@ -665,7 +666,7 @@ const TwoColumnTemplate = ({ data, color, fontFamily, animated, showPhoto, photo
           {hobbies.length > 0 && (
             <Wrap {...aProps(0.35)} className="mb-5">
               <h3 className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color }}>Interests</h3>
-              <div className="flex flex-wrap gap-1">{hobbies.map((h) => (<span key={h} className="text-[9px] px-2 py-0.5 rounded-full" style={{ backgroundColor: color + '15', color }}>{h}</span>))}</div>
+              <div className="flex flex-wrap gap-1">{hobbies.map((h) => (<span key={h} className="text-[9px] px-2 py-0.5 rounded-full" style={{ backgroundColor: hexToRgba(color, 0.082), color }}>{h}</span>))}</div>
             </Wrap>
           )}
           <SocialsRow socials={socials} color={color} />
@@ -690,7 +691,7 @@ const GradientHeaderTemplate = ({ data, color, fontFamily, animated, showPhoto, 
   const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
 
   // Create a lighter version for gradient
-  const lighterColor = color + 'CC';
+  const lighterColor = hexToRgba(color, 0.8);
 
   return (
     <div className="bg-white text-gray-900" style={{ fontFamily }}>
@@ -758,16 +759,16 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
   return (
     <div className="text-gray-200" style={{ fontFamily: "'Consolas', 'Courier New', monospace", backgroundColor: bgDark, backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(0,240,255,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,240,255,0.03) 0%, transparent 50%)' }}>
       {/* Header with cyber grid */}
-      <Wrap {...aProps(0)} className="p-7 pb-5 relative" style={{ borderBottom: `1px solid ${neonColor}30` }}>
-        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `linear-gradient(${neonColor}20 1px, transparent 1px), linear-gradient(90deg, ${neonColor}20 1px, transparent 1px)`, backgroundSize: '20px 20px' }} />
+      <Wrap {...aProps(0)} className="p-7 pb-5 relative" style={{ borderBottom: `1px solid ${hexToRgba(neonColor, 0.188)}` }}>
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `linear-gradient(${hexToRgba(neonColor, 0.125)} 1px, transparent 1px), linear-gradient(90deg, ${hexToRgba(neonColor, 0.125)} 1px, transparent 1px)`, backgroundSize: '20px 20px' }} />
         <div className="flex items-center gap-5 relative z-10">
           {showPhoto && (
-            <div className="w-20 h-20 overflow-hidden shrink-0 relative" style={{ borderRadius: photoRadius, border: `2px solid ${neonColor}`, boxShadow: `0 0 20px ${neonColor}40, inset 0 0 20px ${neonColor}10` }}>
+            <div className="w-20 h-20 overflow-hidden shrink-0 relative" style={{ borderRadius: photoRadius, border: `2px solid ${neonColor}`, boxShadow: `0 0 20px ${hexToRgba(neonColor, 0.251)}, inset 0 0 20px ${hexToRgba(neonColor, 0.063)}` }}>
               <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-bold tracking-wider uppercase" style={{ color: neonColor, textShadow: `0 0 10px ${neonColor}50` }}>{p.fullName || 'Your Name'}</h1>
+            <h1 className="text-2xl font-bold tracking-wider uppercase" style={{ color: neonColor, textShadow: `0 0 10px ${hexToRgba(neonColor, 0.314)}` }}>{p.fullName || 'Your Name'}</h1>
             {p.jobTitle && <p className="text-xs text-gray-400 mt-1 tracking-widest uppercase">{p.jobTitle}</p>}
             <div className="flex flex-wrap gap-3 mt-2.5 text-[10px] text-gray-400">
               {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" style={{ color: neonColor }} />{p.email}</span>}
@@ -781,7 +782,7 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
 
       <div className="p-7 space-y-6">
         {p.summary && (
-          <Wrap {...aProps(0.1)} className="p-4 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${neonColor}15` }}>
+          <Wrap {...aProps(0.1)} className="p-4 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${hexToRgba(neonColor, 0.082)}` }}>
             <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-2 flex items-center gap-2" style={{ color: neonColor }}>
               <Rocket className="w-3.5 h-3.5" /> SYSTEM::ABOUT_ME
             </h3>
@@ -796,13 +797,13 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {skills.map((s: any, i: number) => (
-                <div key={s.id} className="p-2.5 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${neonColor}10` }}>
+                <div key={s.id} className="p-2.5 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${hexToRgba(neonColor, 0.063)}` }}>
                   <div className="flex justify-between text-[10px] mb-1.5">
                     <span className="font-medium text-gray-300">{s.name}</span>
                     <span style={{ color: neonColor }}>{s.level}%</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-gray-800 overflow-hidden">
-                    <motion.div className="h-full rounded-full" style={{ backgroundColor: neonColor, boxShadow: `0 0 6px ${neonColor}60` }}
+                    <motion.div className="h-full rounded-full" style={{ backgroundColor: neonColor, boxShadow: `0 0 6px ${hexToRgba(neonColor, 0.376)}` }}
                       initial={animated ? { width: 0 } : { width: `${s.level}%` }}
                       animate={{ width: `${s.level}%` }}
                       transition={{ duration: 0.8, delay: 0.3 + i * 0.08 }} />
@@ -818,7 +819,7 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
             <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3 flex items-center gap-2" style={{ color: neonColor }}>
               <Briefcase className="w-3.5 h-3.5" /> EXPERIENCE_LOG
             </h3>
-            <div className="space-y-3 ml-3 border-l" style={{ borderColor: neonColor + '30' }}>
+            <div className="space-y-3 ml-3 border-l" style={{ borderColor: hexToRgba(neonColor, 0.188) }}>
               {experience.map((exp: any) => (
                 <div key={exp.id} className="pl-4 relative">
                   <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full" style={{ backgroundColor: neonColor, boxShadow: `0 0 8px ${neonColor}` }} />
@@ -841,7 +842,7 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
               <GraduationCap className="w-3.5 h-3.5" /> EDUCATION_DATA
             </h3>
             {education.map((edu: any) => (
-              <div key={edu.id} className="mb-3 p-3 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${neonColor}10` }}>
+              <div key={edu.id} className="mb-3 p-3 rounded-lg" style={{ backgroundColor: bgCard, border: `1px solid ${hexToRgba(neonColor, 0.063)}` }}>
                 <h4 className="font-bold text-sm text-gray-200">{edu.degree}{edu.field ? ` // ${edu.field}` : ''}</h4>
                 <p className="text-[11px]" style={{ color: neonColor }}>{edu.institution}</p>
                 <p className="text-[10px] text-gray-500">{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</p>
@@ -855,7 +856,7 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
             <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-3" style={{ color: neonColor }}>LANGUAGES</h3>
             <div className="flex flex-wrap gap-2">
               {languages.map((l: any) => (
-                <span key={l.id} className="text-[10px] px-3 py-1 rounded-full" style={{ border: `1px solid ${neonColor}40`, color: neonColor, backgroundColor: `${neonColor}08` }}>
+                <span key={l.id} className="text-[10px] px-3 py-1 rounded-full" style={{ border: `1px solid ${hexToRgba(neonColor, 0.251)}`, color: neonColor, backgroundColor: `${hexToRgba(neonColor, 0.031)}` }}>
                   {l.name} · {l.proficiency}
                 </span>
               ))}
@@ -867,7 +868,7 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
           <Wrap {...aProps(0.45)}>
             <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold mb-2" style={{ color: neonColor }}>INTERESTS</h3>
             <div className="flex flex-wrap gap-1.5">
-              {hobbies.map((h) => (<span key={h} className="px-2.5 py-1 rounded text-[10px]" style={{ backgroundColor: `${neonColor}10`, color: neonColor, border: `1px solid ${neonColor}20` }}>{h}</span>))}
+              {hobbies.map((h) => (<span key={h} className="px-2.5 py-1 rounded text-[10px]" style={{ backgroundColor: `${hexToRgba(neonColor, 0.063)}`, color: neonColor, border: `1px solid ${hexToRgba(neonColor, 0.125)}` }}>{h}</span>))}
             </div>
           </Wrap>
         )}
@@ -893,11 +894,11 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
 
   const SectionHeader = ({ icon: Icon, title }: { icon: any; title: string }) => (
     <div className="flex items-center gap-2.5 mb-4">
-      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: accent + '15' }}>
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: hexToRgba(accent, 0.082) }}>
         <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
       </div>
       <h3 className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>{title}</h3>
-      <div className="flex-1 h-px" style={{ backgroundColor: accent + '15' }} />
+      <div className="flex-1 h-px" style={{ backgroundColor: hexToRgba(accent, 0.082) }} />
     </div>
   );
 
@@ -908,9 +909,9 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
         <div className="p-8 pb-0">
           <div className="flex items-start gap-6">
             {showPhoto && p.profileImage && (
-              <div className="w-24 h-24 overflow-hidden shrink-0 relative" style={{ borderRadius: photoRadius || '16px', border: `2px solid ${accent}40` }}>
+              <div className="w-24 h-24 overflow-hidden shrink-0 relative" style={{ borderRadius: photoRadius || '16px', border: `2px solid ${hexToRgba(accent, 0.251)}` }}>
                 <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 rounded-[inherit]" style={{ boxShadow: `inset 0 0 0 1px ${accent}20` }} />
+                <div className="absolute inset-0 rounded-[inherit]" style={{ boxShadow: `inset 0 0 0 1px ${hexToRgba(accent, 0.125)}` }} />
               </div>
             )}
             <div className="flex-1 min-w-0">
@@ -943,7 +944,7 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
       <div className="p-8 pt-6">
         {/* About section as a card */}
         {p.summary && (
-          <Wrap {...aProps(0.1)} className="mb-6 p-4 rounded-xl" style={{ backgroundColor: accent + '08', border: `1px solid ${accent}15` }}>
+          <Wrap {...aProps(0.1)} className="mb-6 p-4 rounded-xl" style={{ backgroundColor: hexToRgba(accent, 0.031), border: `1px solid ${hexToRgba(accent, 0.082)}` }}>
             <div className="flex items-center gap-2 mb-2">
               <Cpu className="w-3.5 h-3.5" style={{ color: accent }} />
               <h3 className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>About Me</h3>
@@ -960,11 +961,11 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
                 <SectionHeader icon={Briefcase} title="Experience" />
                 <div className="space-y-4 ml-1">
                   {experience.map((exp: any, i: number) => (
-                    <div key={exp.id} className="relative pl-5" style={{ borderLeft: `2px solid ${i === 0 ? accent : accent + '25'}` }}>
-                      <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full" style={{ backgroundColor: i === 0 ? accent : accent + '60', border: i === 0 ? `2px solid ${accent}30` : 'none' }} />
+                    <div key={exp.id} className="relative pl-5" style={{ borderLeft: `2px solid ${i === 0 ? accent : hexToRgba(accent, 0.145)}` }}>
+                      <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full" style={{ backgroundColor: i === 0 ? accent : hexToRgba(accent, 0.376), border: i === 0 ? `2px solid ${hexToRgba(accent, 0.188)}` : 'none' }} />
                       <div className="flex justify-between items-baseline mb-0.5">
                         <h4 className="font-bold text-[13px] text-gray-900">{exp.position}</h4>
-                        <span className="text-[9px] font-medium px-2 py-0.5 rounded-full shrink-0 ml-2" style={{ backgroundColor: accent + '10', color: accent }}>{formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span>
+                        <span className="text-[9px] font-medium px-2 py-0.5 rounded-full shrink-0 ml-2" style={{ backgroundColor: hexToRgba(accent, 0.063), color: accent }}>{formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span>
                       </div>
                       <p className="text-[11px] font-semibold" style={{ color: accent }}>{exp.company}</p>
                       {exp.description && <p className="text-[10px] mt-1.5 leading-relaxed whitespace-pre-line" style={{ color: '#64748b' }}>{exp.description}</p>}
@@ -1003,7 +1004,7 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
                       <span className="font-medium text-gray-700">{s.name}</span>
                       <span className="font-mono text-[9px]" style={{ color: accent }}>{s.level}%</span>
                     </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: accent + '12' }}>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: hexToRgba(accent, 0.071) }}>
                       <motion.div className="h-full rounded-full"
                         style={{ backgroundColor: accent }}
                         initial={animated ? { width: 0 } : { width: `${s.level}%` }}
@@ -1021,7 +1022,7 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
                 {languages.map((l: any) => (
                   <div key={l.id} className="mb-2 flex items-center justify-between">
                     <span className="text-[10px] font-medium text-gray-700">{l.name}</span>
-                    <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ backgroundColor: accent + '10', color: accent }}>{l.proficiency}</span>
+                    <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ backgroundColor: hexToRgba(accent, 0.063), color: accent }}>{l.proficiency}</span>
                   </div>
                 ))}
               </Wrap>
@@ -1032,7 +1033,7 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
                 <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] mb-2" style={{ color: accent }}>Interests</h3>
                 <div className="flex flex-wrap gap-1.5">
                   {hobbies.map((h) => (
-                    <span key={h} className="text-[9px] px-2.5 py-1 rounded-lg font-medium" style={{ backgroundColor: accent + '10', color: accent }}>{h}</span>
+                    <span key={h} className="text-[9px] px-2.5 py-1 rounded-lg font-medium" style={{ backgroundColor: hexToRgba(accent, 0.063), color: accent }}>{h}</span>
                   ))}
                 </div>
               </Wrap>
