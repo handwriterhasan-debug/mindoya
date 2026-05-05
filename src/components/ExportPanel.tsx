@@ -4,82 +4,99 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { X, PartyPopper, Loader2, FileText, Image as ImageIcon, Printer } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-// @ts-ignore - no official types
-import domtoimage from 'dom-to-image-more';
 import jsPDF from 'jspdf';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const A4_RATIO = 297 / 210; // height / width
+const safeColor = (color: string, fallback = '#6C5CE7'): string => {
+  if (!color || typeof color !== 'string') return fallback;
+  const trimmed = color.trim();
+  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed)) return trimmed;
+  if (/^rgba?\(/.test(trimmed)) return trimmed;
+  return fallback;
+};
+
+const sanitizeGradients = (root: HTMLElement, color: string) => {
+  const safe = safeColor(color);
+  const all = root.querySelectorAll<HTMLElement>('*');
+  all.forEach((el) => {
+    const fixGradient = (val: string) =>
+      val.replace(/#([0-9a-fA-F]{6})([0-9a-fA-F]{2})\b/g, (_, hex, alpha) => {
+        const a = parseInt(alpha, 16) / 255;
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        return `rgba(${r},${g},${b},${a.toFixed(3)})`;
+      });
+    if (el.style.background) el.style.background = fixGradient(el.style.background);
+    if (el.style.backgroundImage) el.style.backgroundImage = fixGradient(el.style.backgroundImage);
+  });
+};
 
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const { viewMode, setViewMode } = useCVContext();
+  const { viewMode, setViewMode, data } = useCVContext();
 
-  /**
-   * Render the #cv-output node to a high-resolution PNG data URL using
-   * dom-to-image-more. This library handles CSS gradients, web fonts and
-   * cross-origin images far more reliably than html2canvas (which throws
-   * "addColorStop ... non-finite" on certain gradient stops).
-   */
   const renderCVToPng = useCallback(async (): Promise<{ dataUrl: string; width: number; height: number }> => {
-    // Ensure we capture the static (print) view so layout matches expectations
     const previousViewMode = viewMode;
     if (previousViewMode !== 'static') {
       setViewMode('static');
-      await wait(300);
+      await wait(400);
     }
 
-    // Hide this modal so it never appears in the capture/print
     setHidden(true);
-    await wait(50);
+    await wait(80);
 
     const cv = document.getElementById('cv-output');
     if (!cv) {
       setHidden(false);
-      throw new Error('Resume preview not found. Open the preview first.');
+      if (previousViewMode !== 'static') setViewMode(previousViewMode);
+      throw new Error('Resume preview not found. Make sure the preview is visible.');
     }
 
     if ('fonts' in document) {
       try { await (document as any).fonts.ready; } catch {}
     }
-    await wait(150);
+    await wait(200);
 
+    const scale = 3;
     const width = cv.scrollWidth;
     const height = cv.scrollHeight;
-    const scale = 3; // ~HD / print quality
+    const color = safeColor(data?.design?.primaryColor);
 
     try {
-      const dataUrl: string = await domtoimage.toPng(cv, {
-        bgcolor: '#ffffff',
-        width: width * scale,
-        height: height * scale,
-        style: {
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-          width: `${width}px`,
-          height: `${height}px`,
-          background: '#ffffff',
-        },
-        cacheBust: true,
-        imagePlaceholder: undefined,
-        // Skip elements explicitly marked no-print (modals, toolbars)
-        filter: (node: any) => {
-          if (!(node instanceof HTMLElement)) return true;
-          if (node.dataset && node.dataset.noPrint !== undefined) return false;
-          if (node.classList && node.classList.contains('no-print')) return false;
-          return true;
+      const html2canvas = (await import('html2canvas')).default;
+
+      const canvas = await html2canvas(cv, {
+        scale,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width,
+        height,
+        windowWidth: width,
+        windowHeight: height,
+        onclone: (clonedDoc: Document) => {
+          const clonedEl = clonedDoc.getElementById('cv-output');
+          if (clonedEl) {
+            sanitizeGradients(clonedEl, color);
+          }
         },
       });
 
-      return { dataUrl, width: width * scale, height: height * scale };
+      return {
+        dataUrl: canvas.toDataURL('image/png', 1.0),
+        width: canvas.width,
+        height: canvas.height,
+      };
     } finally {
       setHidden(false);
       if (previousViewMode !== 'static') setViewMode(previousViewMode);
     }
-  }, [viewMode, setViewMode]);
+  }, [viewMode, setViewMode, data]);
 
   const exportPDF = useCallback(async () => {
     if (exporting) return;
@@ -88,8 +105,8 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();   // 210
-      const pageHeight = pdf.internal.pageSize.getHeight(); // 297
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
       const imgWidth = pageWidth;
       const imgHeight = (imgPxH * imgWidth) / imgPxW;
@@ -111,10 +128,14 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
 
       pdf.save('resume.pdf');
       setDone(true);
-      toast({ title: '✅ PDF downloaded', description: 'resume.pdf saved at A4 size.' });
+      toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
     } catch (err: any) {
       console.error('PDF export error:', err);
-      toast({ title: 'Export failed', description: err?.message || 'Could not generate PDF.', variant: 'destructive' });
+      toast({
+        title: 'Export failed',
+        description: err?.message || 'Could not generate PDF. Try the Print option instead.',
+        variant: 'destructive',
+      });
     } finally {
       setExporting(null);
     }
@@ -132,10 +153,14 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       link.click();
       document.body.removeChild(link);
       setDone(true);
-      toast({ title: '✅ PNG downloaded', description: 'High-resolution resume.png saved.' });
+      toast({ title: '✅ PNG downloaded!', description: 'High-resolution resume.png saved.' });
     } catch (err: any) {
       console.error('PNG export error:', err);
-      toast({ title: 'Export failed', description: err?.message || 'Could not generate PNG.', variant: 'destructive' });
+      toast({
+        title: 'Export failed',
+        description: err?.message || 'Could not generate PNG.',
+        variant: 'destructive',
+      });
     } finally {
       setExporting(null);
     }
@@ -148,15 +173,13 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     try {
       if (previousViewMode !== 'static') {
         setViewMode('static');
-        await wait(250);
+        await wait(300);
       }
-      // Hide this modal so the print preview doesn't show a blank overlay page
       setHidden(true);
-      await wait(80);
-
+      await wait(100);
       document.body.classList.add('printing-cv');
       window.print();
-      await wait(400);
+      await wait(500);
     } finally {
       document.body.classList.remove('printing-cv');
       setHidden(false);
@@ -193,16 +216,13 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center py-8">
             <PartyPopper className="w-14 h-14 mx-auto text-primary mb-3" />
             <h3 className="font-heading font-bold text-lg gradient-text">Your CV is Ready!</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Check your downloads folder for the file.
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Check your downloads folder.</p>
             <Button variant="outline" className="mt-4" onClick={() => setDone(false)}>Export Again</Button>
           </motion.div>
         ) : (
           <div className="space-y-2.5">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              High-resolution A4 export at <strong>3× scale</strong> using dom-to-image + jsPDF —
-              gradient-safe, full-page capture with multi-page support.
+              High-resolution A4 export at <strong>3× scale</strong> — gradient-safe, full-page capture.
             </p>
 
             <Button
@@ -234,7 +254,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
               {exporting === 'print' ? 'Opening…' : 'Print Resume'}
             </Button>
 
-            <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1">
+            <p className="text-[11px] text-muted-foreground/80 pt-1">
               Tip: Switch to <em>Print</em> view mode for the cleanest export.
             </p>
           </div>
