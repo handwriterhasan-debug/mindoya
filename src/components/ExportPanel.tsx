@@ -4,75 +4,107 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { X, PartyPopper, Loader2, FileText, Image as ImageIcon, Printer } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import html2canvas from 'html2canvas';
+// @ts-ignore - no official types
+import domtoimage from 'dom-to-image-more';
 import jsPDF from 'jspdf';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+const A4_RATIO = 297 / 210; // height / width
+
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const { viewMode, setViewMode } = useCVContext();
 
-  const captureCanvas = useCallback(async () => {
+  /**
+   * Render the #cv-output node to a high-resolution PNG data URL using
+   * dom-to-image-more. This library handles CSS gradients, web fonts and
+   * cross-origin images far more reliably than html2canvas (which throws
+   * "addColorStop ... non-finite" on certain gradient stops).
+   */
+  const renderCVToPng = useCallback(async (): Promise<{ dataUrl: string; width: number; height: number }> => {
+    // Ensure we capture the static (print) view so layout matches expectations
     const previousViewMode = viewMode;
     if (previousViewMode !== 'static') {
       setViewMode('static');
-      await wait(250);
+      await wait(300);
     }
 
+    // Hide this modal so it never appears in the capture/print
+    setHidden(true);
+    await wait(50);
+
     const cv = document.getElementById('cv-output');
-    if (!cv) throw new Error('Resume preview not found. Open the preview first.');
+    if (!cv) {
+      setHidden(false);
+      throw new Error('Resume preview not found. Open the preview first.');
+    }
 
     if ('fonts' in document) {
       try { await (document as any).fonts.ready; } catch {}
     }
-    await wait(200);
+    await wait(150);
 
-    const canvas = await html2canvas(cv, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: cv.scrollWidth,
-      windowHeight: cv.scrollHeight,
-    });
+    const width = cv.scrollWidth;
+    const height = cv.scrollHeight;
+    const scale = 3; // ~HD / print quality
 
-    if (previousViewMode !== 'static') {
-      setViewMode(previousViewMode);
+    try {
+      const dataUrl: string = await domtoimage.toPng(cv, {
+        bgcolor: '#ffffff',
+        width: width * scale,
+        height: height * scale,
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          width: `${width}px`,
+          height: `${height}px`,
+          background: '#ffffff',
+        },
+        cacheBust: true,
+        imagePlaceholder: undefined,
+        // Skip elements explicitly marked no-print (modals, toolbars)
+        filter: (node: any) => {
+          if (!(node instanceof HTMLElement)) return true;
+          if (node.dataset && node.dataset.noPrint !== undefined) return false;
+          if (node.classList && node.classList.contains('no-print')) return false;
+          return true;
+        },
+      });
+
+      return { dataUrl, width: width * scale, height: height * scale };
+    } finally {
+      setHidden(false);
+      if (previousViewMode !== 'static') setViewMode(previousViewMode);
     }
-
-    return canvas;
   }, [viewMode, setViewMode]);
 
   const exportPDF = useCallback(async () => {
     if (exporting) return;
     setExporting('pdf');
     try {
-      const canvas = await captureCanvas();
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
 
-      // A4 in mm
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pageWidth = pdf.internal.pageSize.getWidth();   // 210
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297
 
       const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgHeight = (imgPxH * imgWidth) / imgPxW;
 
       if (imgHeight <= pageHeight) {
-        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
       } else {
-        // Multi-page: slice the image across A4 pages
         let heightLeft = imgHeight;
         let position = 0;
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
         while (heightLeft > 0) {
           position = heightLeft - imgHeight;
           pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+          pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
           heightLeft -= pageHeight;
         }
       }
@@ -86,16 +118,16 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     } finally {
       setExporting(null);
     }
-  }, [exporting, captureCanvas]);
+  }, [exporting, renderCVToPng]);
 
   const exportPNG = useCallback(async () => {
     if (exporting) return;
     setExporting('png');
     try {
-      const canvas = await captureCanvas();
+      const { dataUrl } = await renderCVToPng();
       const link = document.createElement('a');
       link.download = 'resume.png';
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -107,23 +139,28 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     } finally {
       setExporting(null);
     }
-  }, [exporting, captureCanvas]);
+  }, [exporting, renderCVToPng]);
 
   const printResume = useCallback(async () => {
     if (exporting) return;
     setExporting('print');
+    const previousViewMode = viewMode;
     try {
-      const previousViewMode = viewMode;
       if (previousViewMode !== 'static') {
         setViewMode('static');
-        await wait(200);
+        await wait(250);
       }
+      // Hide this modal so the print preview doesn't show a blank overlay page
+      setHidden(true);
+      await wait(80);
+
       document.body.classList.add('printing-cv');
       window.print();
-      await wait(300);
-      document.body.classList.remove('printing-cv');
-      if (previousViewMode !== 'static') setViewMode(previousViewMode);
+      await wait(400);
     } finally {
+      document.body.classList.remove('printing-cv');
+      setHidden(false);
+      if (previousViewMode !== 'static') setViewMode(previousViewMode);
       setExporting(null);
     }
   }, [exporting, viewMode, setViewMode]);
@@ -131,8 +168,9 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      animate={{ opacity: hidden ? 0 : 1 }}
       exit={{ opacity: 0 }}
+      style={{ pointerEvents: hidden ? 'none' : 'auto', visibility: hidden ? 'hidden' : 'visible' }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm p-4 no-print"
       onClick={onClose}
       data-no-print
@@ -142,6 +180,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         animate={{ scale: 1, opacity: 1 }}
         className="ios-card rounded-2xl p-6 max-w-md w-full space-y-5"
         onClick={(e) => e.stopPropagation()}
+        data-no-print
       >
         <div className="flex items-center justify-between">
           <h2 className="font-heading font-bold text-lg">Export CV</h2>
@@ -162,8 +201,8 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         ) : (
           <div className="space-y-2.5">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              High-resolution A4 export at <strong>3× scale</strong> using html2canvas + jsPDF —
-              captures the full resume with multi-page support.
+              High-resolution A4 export at <strong>3× scale</strong> using dom-to-image + jsPDF —
+              gradient-safe, full-page capture with multi-page support.
             </p>
 
             <Button
