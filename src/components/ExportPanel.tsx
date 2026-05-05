@@ -2,8 +2,10 @@ import { useState, useCallback } from 'react';
 import { useCVContext } from '@/context/CVContext';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { X, PartyPopper, Loader2, FileText, Printer } from 'lucide-react';
+import { X, PartyPopper, Loader2, FileText, Image as ImageIcon, Printer } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -12,62 +14,119 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [done, setDone] = useState(false);
   const { viewMode, setViewMode } = useCVContext();
 
-  const triggerPrint = useCallback(async (label: string) => {
-    if (exporting) return;
-    setExporting(label);
-
+  const captureCanvas = useCallback(async () => {
     const previousViewMode = viewMode;
     if (previousViewMode !== 'static') {
       setViewMode('static');
+      await wait(250);
     }
 
-    // Make sure CV is in DOM
     const cv = document.getElementById('cv-output');
-    if (!cv) {
-      toast({
-        title: 'CV preview not found',
-        description: 'Open the preview first, then try again.',
-        variant: 'destructive',
-      });
-      setExporting(null);
-      return;
+    if (!cv) throw new Error('Resume preview not found. Open the preview first.');
+
+    if ('fonts' in document) {
+      try { await (document as any).fonts.ready; } catch {}
+    }
+    await wait(200);
+
+    const canvas = await html2canvas(cv, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: cv.scrollWidth,
+      windowHeight: cv.scrollHeight,
+    });
+
+    if (previousViewMode !== 'static') {
+      setViewMode(previousViewMode);
     }
 
+    return canvas;
+  }, [viewMode, setViewMode]);
+
+  const exportPDF = useCallback(async () => {
+    if (exporting) return;
+    setExporting('pdf');
     try {
-      // Wait for fonts and a couple of frames so layout settles
-      if ('fonts' in document) {
-        try { await (document as any).fonts.ready; } catch {}
+      const canvas = await captureCanvas();
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+      // A4 in mm
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();   // 210
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297
+
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (imgHeight <= pageHeight) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+      } else {
+        // Multi-page: slice the image across A4 pages
+        let heightLeft = imgHeight;
+        let position = 0;
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+          heightLeft -= pageHeight;
+        }
       }
-      await wait(150);
 
+      pdf.save('resume.pdf');
+      setDone(true);
+      toast({ title: '✅ PDF downloaded', description: 'resume.pdf saved at A4 size.' });
+    } catch (err: any) {
+      console.error('PDF export error:', err);
+      toast({ title: 'Export failed', description: err?.message || 'Could not generate PDF.', variant: 'destructive' });
+    } finally {
+      setExporting(null);
+    }
+  }, [exporting, captureCanvas]);
+
+  const exportPNG = useCallback(async () => {
+    if (exporting) return;
+    setExporting('png');
+    try {
+      const canvas = await captureCanvas();
+      const link = document.createElement('a');
+      link.download = 'resume.png';
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setDone(true);
+      toast({ title: '✅ PNG downloaded', description: 'High-resolution resume.png saved.' });
+    } catch (err: any) {
+      console.error('PNG export error:', err);
+      toast({ title: 'Export failed', description: err?.message || 'Could not generate PNG.', variant: 'destructive' });
+    } finally {
+      setExporting(null);
+    }
+  }, [exporting, captureCanvas]);
+
+  const printResume = useCallback(async () => {
+    if (exporting) return;
+    setExporting('print');
+    try {
+      const previousViewMode = viewMode;
+      if (previousViewMode !== 'static') {
+        setViewMode('static');
+        await wait(200);
+      }
       document.body.classList.add('printing-cv');
-
-      // Use the browser's native print → "Save as PDF" produces vector PDF at A4
       window.print();
-
-      // Cleanup shortly after print dialog closes
       await wait(300);
       document.body.classList.remove('printing-cv');
-
-      setDone(true);
-      toast({
-        title: '🖨️ Print dialog opened',
-        description: 'Choose "Save as PDF" and A4 paper size for a vector resume.',
-      });
-    } catch (err: any) {
-      console.error('Print export error:', err);
-      toast({
-        title: 'Export failed',
-        description: err?.message || 'Could not open print dialog.',
-        variant: 'destructive',
-      });
+      if (previousViewMode !== 'static') setViewMode(previousViewMode);
     } finally {
-      if (previousViewMode !== 'static') {
-        setViewMode(previousViewMode);
-      }
       setExporting(null);
     }
-  }, [exporting, setViewMode, viewMode]);
+  }, [exporting, viewMode, setViewMode]);
 
   return (
     <motion.div
@@ -96,44 +155,48 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
             <PartyPopper className="w-14 h-14 mx-auto text-primary mb-3" />
             <h3 className="font-heading font-bold text-lg gradient-text">Your CV is Ready!</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              In the print dialog, choose <strong>Save as PDF</strong> and <strong>A4</strong> paper size.
+              Check your downloads folder for the file.
             </p>
             <Button variant="outline" className="mt-4" onClick={() => setDone(false)}>Export Again</Button>
           </motion.div>
         ) : (
           <div className="space-y-2.5">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Generates a real <strong>vector A4 PDF</strong> using your browser's print engine —
-              sharp text, multi-page support, and zero image compression.
+              High-resolution A4 export at <strong>3× scale</strong> using html2canvas + jsPDF —
+              captures the full resume with multi-page support.
             </p>
+
             <Button
-              onClick={() => triggerPrint('pdf')}
+              onClick={exportPDF}
               disabled={!!exporting}
               className="w-full gradient-primary text-primary-foreground h-[52px] rounded-xl text-sm font-semibold"
             >
-              {exporting === 'pdf' ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="w-4 h-4 mr-2" />
-              )}
-              {exporting === 'pdf' ? 'Opening Print Dialog...' : 'Download PDF (A4 — Save as PDF)'}
+              {exporting === 'pdf' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+              {exporting === 'pdf' ? 'Generating PDF…' : 'Download PDF (A4)'}
             </Button>
+
             <Button
-              onClick={() => triggerPrint('print')}
+              onClick={exportPNG}
               disabled={!!exporting}
               variant="outline"
               className="w-full h-[52px] rounded-xl text-sm font-semibold"
             >
-              {exporting === 'print' ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Printer className="w-4 h-4 mr-2" />
-              )}
-              {exporting === 'print' ? 'Opening...' : 'Print Resume'}
+              {exporting === 'png' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImageIcon className="w-4 h-4 mr-2" />}
+              {exporting === 'png' ? 'Generating PNG…' : 'Download PNG (HD)'}
             </Button>
+
+            <Button
+              onClick={printResume}
+              disabled={!!exporting}
+              variant="outline"
+              className="w-full h-[52px] rounded-xl text-sm font-semibold"
+            >
+              {exporting === 'print' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Printer className="w-4 h-4 mr-2" />}
+              {exporting === 'print' ? 'Opening…' : 'Print Resume'}
+            </Button>
+
             <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1">
-              Tip: In the print dialog, set <em>Margins → Default</em>, <em>Scale → 100%</em>,
-              and enable <em>Background graphics</em> for full-color export.
+              Tip: Switch to <em>Print</em> view mode for the cleanest export.
             </p>
           </div>
         )}
