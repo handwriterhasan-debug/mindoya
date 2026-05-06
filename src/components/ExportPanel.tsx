@@ -8,184 +8,94 @@ import jsPDF from 'jspdf';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const safeColor = (color: string, fallback = '#6C5CE7'): string => {
-  if (!color || typeof color !== 'string') return fallback;
-  const trimmed = color.trim();
-  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed)) return trimmed;
-  if (/^rgba?\(/.test(trimmed)) return trimmed;
-  return fallback;
-};
-
-const sanitizeGradients = (root: HTMLElement, color: string) => {
-  const safe = safeColor(color);
-  const all = root.querySelectorAll<HTMLElement>('*');
-  all.forEach((el) => {
-    const fixGradient = (val: string) =>
-      val.replace(/#([0-9a-fA-F]{6})([0-9a-fA-F]{2})\b/g, (_, hex, alpha) => {
-        const a = parseInt(alpha, 16) / 255;
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        return `rgba(${r},${g},${b},${a.toFixed(3)})`;
-      });
-    if (el.style.background) el.style.background = fixGradient(el.style.background);
-    if (el.style.backgroundImage) el.style.backgroundImage = fixGradient(el.style.backgroundImage);
-  });
-};
-
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const { viewMode, setViewMode, data } = useCVContext();
+  const { viewMode, setViewMode } = useCVContext();
 
-  const renderCVToPng = useCallback(async (): Promise<{ dataUrl: string; width: number; height: number }> => {
-    const previousViewMode = viewMode;
-    if (previousViewMode !== 'static') {
+  // ✅ FINAL FIXED RENDER FUNCTION
+  const renderCVToPng = useCallback(async () => {
+    const prevMode = viewMode;
+
+    if (prevMode !== 'static') {
       setViewMode('static');
-      await wait(400);
+      await wait(300);
     }
 
-    setHidden(true);
-    await wait(80);
-
-    // Force-show preview if hidden (mobile layout hides it)
     const cv = document.getElementById('cv-output');
-    const previewParent = cv?.parentElement?.parentElement?.parentElement as HTMLElement | null;
-    let wasHidden = false;
-    if (previewParent && previewParent.classList.contains('hidden')) {
-      wasHidden = true;
-      previewParent.classList.remove('hidden');
-      previewParent.classList.add('block');
-      await wait(200);
-    }
+    if (!cv) throw new Error('CV not found');
 
-    if (!cv) {
-      setHidden(false);
-      if (wasHidden && previewParent) {
-        previewParent.classList.add('hidden');
-        previewParent.classList.remove('block');
-      }
-      if (previousViewMode !== 'static') setViewMode(previousViewMode);
-      throw new Error('Resume preview not found. Make sure the preview is visible.');
-    }
-
-    if ('fonts' in document) {
-      try { await (document as any).fonts.ready; } catch {}
-    }
-    await wait(200);
-
-    // Fixed A4 dimensions - ALWAYS same size/quality for every user, every template
-    const A4_WIDTH = 794;   // A4 width in px at 96dpi
-    const scale = 3;        // 3x = 2382px wide — sharp on all screens
-    const color = safeColor(data?.design?.primaryColor);
-
-    // Save original styles
-    const prevWidth = cv.style.width;
-    const prevMaxWidth = cv.style.maxWidth;
-    const prevMinHeight = cv.style.minHeight;
-    const prevOverflow = cv.style.overflow;
-
-    // Force exact A4 width, remove minHeight constraint
-    cv.style.width = A4_WIDTH + 'px';
-    cv.style.maxWidth = A4_WIDTH + 'px';
+    // 🔥 Force A4 size
+    cv.style.width = '794px';
+    cv.style.maxWidth = '794px';
     cv.style.minHeight = 'auto';
     cv.style.overflow = 'visible';
-    await wait(300); // wait for reflow
 
-    const contentHeight = cv.scrollHeight;
+    // 🔥 Stop animations
+    document.querySelectorAll('*').forEach((node) => {
+      const el = node as HTMLElement;
+      el.style.animation = 'none';
+      el.style.transition = 'none';
+    });
 
-    try {
-      const html2canvas = (await import('html2canvas')).default;
+    // 🔥 Fix skill bars
+    document.querySelectorAll('.skill-bar').forEach((bar) => {
+      const el = bar as HTMLElement;
+      const width = el.getAttribute('data-width') || '100%';
+      el.style.width = width;
+    });
 
-      const canvas = await html2canvas(cv, {
-        scale,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: A4_WIDTH,
-        height: contentHeight,
-        windowWidth: A4_WIDTH,
-        windowHeight: contentHeight,
-        onclone: (clonedDoc: Document) => {
-          const clonedEl = clonedDoc.getElementById('cv-output');
-          if (clonedEl) {
-            clonedEl.style.width = A4_WIDTH + 'px';
-            clonedEl.style.maxWidth = A4_WIDTH + 'px';
-            clonedEl.style.minHeight = 'auto';
-            clonedEl.style.overflow = 'visible';
-            sanitizeGradients(clonedEl, color);
-          }
-        },
-      });
+    // 🔥 Fix SVG charts
+    document.querySelectorAll('circle').forEach((c) => {
+      (c as SVGCircleElement).style.strokeDashoffset = '0';
+    });
 
-      // Restore styles
-      cv.style.width = prevWidth;
-      cv.style.maxWidth = prevMaxWidth;
-      cv.style.minHeight = prevMinHeight;
-      cv.style.overflow = prevOverflow;
+    await wait(200);
 
-      return {
-        dataUrl: canvas.toDataURL('image/png', 1.0),
-        width: canvas.width,
-        height: canvas.height,
-      };
-    } finally {
-      setHidden(false);
-      if (wasHidden && previewParent) {
-        previewParent.classList.add('hidden');
-        previewParent.classList.remove('block');
-      }
-      if (previousViewMode !== 'static') setViewMode(previousViewMode);
+    const html2canvas = (await import('html2canvas')).default;
+
+    const canvas = await html2canvas(cv, {
+      scale: 3, // ⭐ HD
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      width: 794,
+      height: cv.scrollHeight,
+      windowWidth: 794,
+      windowHeight: cv.scrollHeight,
+    });
+
+    if (prevMode !== 'static') {
+      setViewMode(prevMode);
     }
-  }, [viewMode, setViewMode, data]);
 
+    return {
+      dataUrl: canvas.toDataURL('image/png', 1),
+      width: canvas.width,
+      height: canvas.height,
+    };
+  }, [viewMode, setViewMode]);
+
+  // ✅ FIXED PDF (NO BLANK PAGES)
   const exportPDF = useCallback(async () => {
     if (exporting) return;
     setExporting('pdf');
+
     try {
-      const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
+      const { dataUrl, width, height } = await renderCVToPng();
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      const imgWidth = pageWidth;
-      const imgHeight = (imgPxH * imgWidth) / imgPxW;
-
-      // Only add pages that have actual content - no blank pages
-      if (imgHeight <= pageHeight) {
-        // Fits on one page - trim PDF height to content
-        const singlePagePdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pageWidth, imgHeight] });
-        singlePagePdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
-        singlePagePdf.save('resume.pdf');
-        setDone(true);
-        toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
-        return;
-      } else {
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
-        while (heightLeft > 2) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-          heightLeft -= pageHeight;
-        }
-      }
-
-      pdf.save('resume.pdf');
-      setDone(true);
-      toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
-    } catch (err: any) {
-      console.error('PDF export error:', err);
-      toast({
-        title: 'Export failed',
-        description: err?.message || 'Could not generate PDF. Try the Print option instead.',
-        variant: 'destructive',
+      const pdf = new jsPDF({
+        unit: 'px',
+        format: [794, height], // 🔥 dynamic height
       });
+
+      pdf.addImage(dataUrl, 'PNG', 0, 0, 794, height);
+      pdf.save('resume.pdf');
+
+      setDone(true);
+      toast({ title: '✅ PDF downloaded!' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message });
     } finally {
       setExporting(null);
     }
@@ -194,122 +104,51 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const exportPNG = useCallback(async () => {
     if (exporting) return;
     setExporting('png');
+
     try {
       const { dataUrl } = await renderCVToPng();
+
       const link = document.createElement('a');
       link.download = 'resume.png';
       link.href = dataUrl;
-      document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+
       setDone(true);
-      toast({ title: '✅ PNG downloaded!', description: 'High-resolution resume.png saved.' });
+      toast({ title: '✅ PNG downloaded!' });
     } catch (err: any) {
-      console.error('PNG export error:', err);
-      toast({
-        title: 'Export failed',
-        description: err?.message || 'Could not generate PNG.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: err.message });
     } finally {
       setExporting(null);
     }
   }, [exporting, renderCVToPng]);
 
-  const printResume = useCallback(async () => {
-    if (exporting) return;
-    setExporting('print');
-    const previousViewMode = viewMode;
-    try {
-      if (previousViewMode !== 'static') {
-        setViewMode('static');
-        await wait(300);
-      }
-      setHidden(true);
-      await wait(100);
-      document.body.classList.add('printing-cv');
-      window.print();
-      await wait(500);
-    } finally {
-      document.body.classList.remove('printing-cv');
-      setHidden(false);
-      if (previousViewMode !== 'static') setViewMode(previousViewMode);
-      setExporting(null);
-    }
-  }, [exporting, viewMode, setViewMode]);
+  const printResume = useCallback(() => {
+    window.print();
+  }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: hidden ? 0 : 1 }}
-      exit={{ opacity: 0 }}
-      style={{ pointerEvents: hidden ? 'none' : 'auto', visibility: hidden ? 'hidden' : 'visible' }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm p-4 no-print"
-      onClick={onClose}
-      data-no-print
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="ios-card rounded-2xl p-6 max-w-md w-full space-y-5"
-        onClick={(e) => e.stopPropagation()}
-        data-no-print
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="font-heading font-bold text-lg">Export CV</h2>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-secondary transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white p-6 rounded-xl w-[350px] space-y-4">
 
-        {done ? (
-          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center py-8">
-            <PartyPopper className="w-14 h-14 mx-auto text-primary mb-3" />
-            <h3 className="font-heading font-bold text-lg gradient-text">Your CV is Ready!</h3>
-            <p className="text-sm text-muted-foreground mt-1">Check your downloads folder.</p>
-            <Button variant="outline" className="mt-4" onClick={() => setDone(false)}>Export Again</Button>
-          </motion.div>
-        ) : (
-          <div className="space-y-2.5">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              High-resolution A4 export at <strong>3× scale</strong> — gradient-safe, full-page capture.
-            </p>
+        <h2 className="text-lg font-bold">Export CV</h2>
 
-            <Button
-              onClick={exportPDF}
-              disabled={!!exporting}
-              className="w-full gradient-primary text-primary-foreground h-[52px] rounded-xl text-sm font-semibold"
-            >
-              {exporting === 'pdf' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-              {exporting === 'pdf' ? 'Generating PDF…' : 'Download PDF (A4)'}
-            </Button>
+        <Button onClick={exportPDF} disabled={!!exporting}>
+          {exporting === 'pdf' ? 'Loading...' : 'Download PDF'}
+        </Button>
 
-            <Button
-              onClick={exportPNG}
-              disabled={!!exporting}
-              variant="outline"
-              className="w-full h-[52px] rounded-xl text-sm font-semibold"
-            >
-              {exporting === 'png' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImageIcon className="w-4 h-4 mr-2" />}
-              {exporting === 'png' ? 'Generating PNG…' : 'Download PNG (HD)'}
-            </Button>
+        <Button onClick={exportPNG} disabled={!!exporting}>
+          {exporting === 'png' ? 'Loading...' : 'Download PNG'}
+        </Button>
 
-            <Button
-              onClick={printResume}
-              disabled={!!exporting}
-              variant="outline"
-              className="w-full h-[52px] rounded-xl text-sm font-semibold"
-            >
-              {exporting === 'print' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Printer className="w-4 h-4 mr-2" />}
-              {exporting === 'print' ? 'Opening…' : 'Print Resume'}
-            </Button>
+        <Button onClick={printResume}>
+          Print
+        </Button>
 
-            <p className="text-[11px] text-muted-foreground/80 pt-1">
-              Tip: Switch to <em>Print</em> view mode for the cleanest export.
-            </p>
-          </div>
-        )}
-      </motion.div>
+        <Button onClick={onClose} variant="outline">
+          Close
+        </Button>
+
+      </div>
     </motion.div>
   );
 };
