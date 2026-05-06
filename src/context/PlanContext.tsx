@@ -52,10 +52,12 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
 };
 
-// Free-tier templates (subset)
-export const FREE_TEMPLATES = ['modern', 'minimal', 'classic'];
-// Premium-only exclusive templates
-export const PREMIUM_TEMPLATES = ['scifi', 'modernai', 'gradient', 'infographic'];
+// Pro-locked templates (exactly 3)
+export const PRO_TEMPLATES = ['executive', 'creative', 'tech'];
+// Premium-only exclusive templates (exactly 3)
+export const PREMIUM_TEMPLATES = ['scifi', 'modernai', 'infographic'];
+// Free-tier = everything else (6 templates)
+export const FREE_TEMPLATES = ['modern', 'minimal', 'classic', 'magazine', 'twocolumn', 'gradient'];
 
 interface PlanContextType {
   plan: Plan;
