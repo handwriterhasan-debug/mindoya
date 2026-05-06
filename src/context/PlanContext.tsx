@@ -219,6 +219,7 @@ export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({ children
       plan, setPlan, limits, library, saveCV, deleteCV, duplicateCV, getCV,
       canCreateNewCV, isTemplateLocked,
       showUpgrade, openUpgrade, closeUpgrade,
+      planExpiresAt, redeemCoupon,
     }}>
       {children}
     </PlanContext.Provider>
