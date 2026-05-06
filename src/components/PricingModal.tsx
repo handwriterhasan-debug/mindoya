@@ -197,6 +197,38 @@ const PricingModal = ({ open, onClose, reason }: PricingModalProps) => {
               })}
             </div>
 
+            {/* Coupon code */}
+            <div className="mx-5 mb-4 p-4 rounded-2xl border border-dashed border-border bg-secondary/40">
+              <div className="flex items-center gap-2 mb-2">
+                <Ticket className="w-4 h-4 text-primary" />
+                <h3 className="font-heading font-bold text-sm">Have a coupon code?</h3>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-3">
+                Redeem a code to unlock Pro or Premium for 1 month — instantly, free.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={coupon}
+                  onChange={e => setCoupon(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleRedeem(); }}
+                  placeholder="Enter code"
+                  className="h-10 rounded-xl text-sm"
+                />
+                <Button
+                  onClick={handleRedeem}
+                  disabled={!coupon.trim() || redeeming}
+                  className="h-10 rounded-xl px-4 text-sm font-semibold gradient-primary text-primary-foreground"
+                >
+                  Redeem
+                </Button>
+              </div>
+              {planExpiresAt && plan !== 'free' && (
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Active {plan} plan expires on {new Date(planExpiresAt).toLocaleDateString()}.
+                </p>
+              )}
+            </div>
+
             <p className="text-[10px] text-muted-foreground text-center px-5 pb-5">
               Mock subscription · no real charges. Real Stripe billing can be added later.
             </p>
