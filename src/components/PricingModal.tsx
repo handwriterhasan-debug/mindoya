@@ -70,7 +70,23 @@ const plans: Array<{
 ];
 
 const PricingModal = ({ open, onClose, reason }: PricingModalProps) => {
-  const { plan, setPlan } = usePlan();
+  const { plan, setPlan, redeemCoupon, planExpiresAt } = usePlan();
+  const [coupon, setCoupon] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+
+  const handleRedeem = () => {
+    if (!coupon.trim()) return;
+    setRedeeming(true);
+    const res = redeemCoupon(coupon);
+    setRedeeming(false);
+    if (res.ok) {
+      toast({ title: res.message, description: 'Active for 30 days.' });
+      setCoupon('');
+      onClose();
+    } else {
+      toast({ title: '❌ Invalid code', description: res.message, variant: 'destructive' });
+    }
+  };
 
   const handleSelect = (target: Plan) => {
     if (target === plan) return;
