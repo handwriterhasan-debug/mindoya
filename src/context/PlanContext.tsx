@@ -52,10 +52,12 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
 };
 
-// Free-tier templates (subset)
-export const FREE_TEMPLATES = ['modern', 'minimal', 'classic'];
-// Premium-only exclusive templates
-export const PREMIUM_TEMPLATES = ['scifi', 'modernai', 'gradient', 'infographic'];
+// Pro-locked templates (exactly 3)
+export const PRO_TEMPLATES = ['executive', 'creative', 'tech'];
+// Premium-only exclusive templates (exactly 3)
+export const PREMIUM_TEMPLATES = ['scifi', 'modernai', 'infographic'];
+// Free-tier = everything else (6 templates)
+export const FREE_TEMPLATES = ['modern', 'minimal', 'classic', 'magazine', 'twocolumn', 'gradient'];
 
 interface PlanContextType {
   plan: Plan;
@@ -71,6 +73,8 @@ interface PlanContextType {
   showUpgrade: { open: boolean; reason?: string };
   openUpgrade: (reason?: string) => void;
   closeUpgrade: () => void;
+  planExpiresAt: number | null;
+  redeemCoupon: (code: string) => { ok: boolean; plan?: Plan; message: string };
 }
 
 const PlanContext = createContext<PlanContextType | null>(null);
@@ -83,6 +87,13 @@ export const usePlan = () => {
 
 const LIB_KEY = 'mindoya-library';
 const PLAN_KEY = 'mindoya-plan';
+const PLAN_EXPIRES_KEY = 'mindoya-plan-expires';
+
+const COUPONS: Record<string, Plan> = {
+  'lefttricks': 'pro',
+  '1856hk': 'premium',
+};
+const COUPON_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [plan, setPlanState] = useState<Plan>(() => {
@@ -90,6 +101,12 @@ export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const v = localStorage.getItem(PLAN_KEY) as Plan | null;
       return v && ['free', 'pro', 'premium'].includes(v) ? v : 'free';
     } catch { return 'free'; }
+  });
+  const [planExpiresAt, setPlanExpiresAt] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem(PLAN_EXPIRES_KEY);
+      return v ? parseInt(v, 10) : null;
+    } catch { return null; }
   });
   const [library, setLibrary] = useState<SavedCV[]>(() => {
     try {
@@ -99,12 +116,42 @@ export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [showUpgrade, setShowUpgrade] = useState<{ open: boolean; reason?: string }>({ open: false });
 
+  // Auto-downgrade on expiry
+  useEffect(() => {
+    if (planExpiresAt && Date.now() > planExpiresAt) {
+      setPlanState('free');
+      setPlanExpiresAt(null);
+    }
+  }, [planExpiresAt]);
+
   useEffect(() => { localStorage.setItem(PLAN_KEY, plan); }, [plan]);
+  useEffect(() => {
+    if (planExpiresAt) localStorage.setItem(PLAN_EXPIRES_KEY, String(planExpiresAt));
+    else localStorage.removeItem(PLAN_EXPIRES_KEY);
+  }, [planExpiresAt]);
   useEffect(() => { localStorage.setItem(LIB_KEY, JSON.stringify(library)); }, [library]);
 
   const limits = PLAN_LIMITS[plan];
 
-  const setPlan = useCallback((p: Plan) => setPlanState(p), []);
+  const setPlan = useCallback((p: Plan) => {
+    setPlanState(p);
+    setPlanExpiresAt(null); // manual plan changes clear coupon expiry
+  }, []);
+
+  const redeemCoupon = useCallback((code: string) => {
+    const normalized = code.trim().toLowerCase();
+    const target = COUPONS[normalized];
+    if (!target) {
+      return { ok: false, message: 'Invalid coupon code' };
+    }
+    setPlanState(target);
+    setPlanExpiresAt(Date.now() + COUPON_DURATION_MS);
+    return {
+      ok: true,
+      plan: target,
+      message: `🎉 ${target === 'pro' ? 'Pro' : 'Premium'} unlocked for 1 month!`,
+    };
+  }, []);
 
   const openUpgrade = useCallback((reason?: string) => setShowUpgrade({ open: true, reason }), []);
   const closeUpgrade = useCallback(() => setShowUpgrade({ open: false }), []);
@@ -172,6 +219,7 @@ export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({ children
       plan, setPlan, limits, library, saveCV, deleteCV, duplicateCV, getCV,
       canCreateNewCV, isTemplateLocked,
       showUpgrade, openUpgrade, closeUpgrade,
+      planExpiresAt, redeemCoupon,
     }}>
       {children}
     </PlanContext.Provider>
