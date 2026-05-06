@@ -75,16 +75,24 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     }
     await wait(200);
 
-    const scale = 3;
-    const A4_WIDTH = 794;
+    // Fixed A4 dimensions - ALWAYS same size/quality for every user, every template
+    const A4_WIDTH = 794;   // A4 width in px at 96dpi
+    const scale = 3;        // 3x = 2382px wide — sharp on all screens
     const color = safeColor(data?.design?.primaryColor);
 
-    // Force A4 width for proper render
+    // Save original styles
     const prevWidth = cv.style.width;
     const prevMaxWidth = cv.style.maxWidth;
+    const prevMinHeight = cv.style.minHeight;
+    const prevOverflow = cv.style.overflow;
+
+    // Force exact A4 width, remove minHeight constraint
     cv.style.width = A4_WIDTH + 'px';
     cv.style.maxWidth = A4_WIDTH + 'px';
-    await wait(150);
+    cv.style.minHeight = 'auto';
+    cv.style.overflow = 'visible';
+    await wait(300); // wait for reflow
+
     const contentHeight = cv.scrollHeight;
 
     try {
@@ -105,13 +113,18 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           if (clonedEl) {
             clonedEl.style.width = A4_WIDTH + 'px';
             clonedEl.style.maxWidth = A4_WIDTH + 'px';
+            clonedEl.style.minHeight = 'auto';
+            clonedEl.style.overflow = 'visible';
             sanitizeGradients(clonedEl, color);
           }
         },
       });
 
+      // Restore styles
       cv.style.width = prevWidth;
       cv.style.maxWidth = prevMaxWidth;
+      cv.style.minHeight = prevMinHeight;
+      cv.style.overflow = prevOverflow;
 
       return {
         dataUrl: canvas.toDataURL('image/png', 1.0),
