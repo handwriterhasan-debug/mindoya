@@ -73,6 +73,8 @@ interface PlanContextType {
   showUpgrade: { open: boolean; reason?: string };
   openUpgrade: (reason?: string) => void;
   closeUpgrade: () => void;
+  planExpiresAt: number | null;
+  redeemCoupon: (code: string) => { ok: boolean; plan?: Plan; message: string };
 }
 
 const PlanContext = createContext<PlanContextType | null>(null);
