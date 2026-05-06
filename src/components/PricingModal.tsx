@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Sparkles, Crown, Zap, Lock } from 'lucide-react';
+import { X, Check, Sparkles, Crown, Zap, Lock, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { usePlan, Plan } from '@/context/PlanContext';
 import { toast } from '@/hooks/use-toast';
 
