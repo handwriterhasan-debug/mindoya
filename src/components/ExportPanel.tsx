@@ -33,6 +33,104 @@ const sanitizeGradients = (root: HTMLElement, color: string) => {
   });
 };
 
+/**
+ * Stabilize the cloned CV DOM for consistent export across all templates.
+ * - Force 794px width on the root and any nested CV containers
+ * - Freeze percentage-based progress bars at their final pixel widths
+ * - Freeze SVG circular charts (strokeDashoffset animations) at final values
+ * - Prevent flex/grid children from collapsing or reflowing
+ * NOTE: Receives BOTH the live source element (to read computed values from)
+ * and the cloned target element (to mutate). This guarantees we capture the
+ * truly-rendered final state regardless of any in-flight CSS animation.
+ */
+const stabilizeForExport = (
+  sourceRoot: HTMLElement,
+  cloneRoot: HTMLElement,
+  targetWidth: number,
+) => {
+  // 1. Force fixed width on root + any inner CV wrapper
+  cloneRoot.style.setProperty('width', `${targetWidth}px`, 'important');
+  cloneRoot.style.setProperty('max-width', `${targetWidth}px`, 'important');
+  cloneRoot.style.setProperty('min-width', `${targetWidth}px`, 'important');
+  cloneRoot.style.setProperty('overflow', 'visible', 'important');
+
+  const innerWrappers = cloneRoot.querySelectorAll<HTMLElement>(
+    '.cv-content-wrapper, [data-cv-page], [data-cv-root]'
+  );
+  innerWrappers.forEach((w) => {
+    w.style.setProperty('width', `${targetWidth}px`, 'important');
+    w.style.setProperty('max-width', `${targetWidth}px`, 'important');
+    w.style.setProperty('min-width', `${targetWidth}px`, 'important');
+    w.style.setProperty('overflow', 'visible', 'important');
+  });
+
+  const sourceAll = Array.from(sourceRoot.querySelectorAll<HTMLElement>('*'));
+  const cloneAll = Array.from(cloneRoot.querySelectorAll<HTMLElement>('*'));
+  const len = Math.min(sourceAll.length, cloneAll.length);
+
+  for (let i = 0; i < len; i++) {
+    const src = sourceAll[i];
+    const dst = cloneAll[i];
+    if (!src || !dst) continue;
+
+    const cs = window.getComputedStyle(src);
+
+    // 2. Kill all transitions/animations in the clone for stable capture
+    dst.style.setProperty('transition', 'none', 'important');
+    dst.style.setProperty('animation', 'none', 'important');
+
+    // 3. Freeze progress-bar-like elements (percent widths inside narrow bars)
+    //    Heuristic: small height, percentage-driven width, or framer-motion bars.
+    const isProgressBar =
+      dst.matches('[data-progress-bar], .progress-bar, [role="progressbar"] > *') ||
+      (cs.width.endsWith('%') && parseFloat(cs.height) > 0 && parseFloat(cs.height) <= 12);
+
+    if (isProgressBar || (src.style && src.style.width && src.style.width.includes('%'))) {
+      const finalWidthPx = src.getBoundingClientRect().width;
+      if (Number.isFinite(finalWidthPx) && finalWidthPx > 0) {
+        dst.style.setProperty('width', `${finalWidthPx}px`, 'important');
+      }
+    }
+
+    // 4. Stabilize flex/grid: prevent children from collapsing
+    const display = cs.display;
+    if (display === 'flex' || display === 'inline-flex' || display === 'grid' || display === 'inline-grid') {
+      const srcChildren = Array.from(src.children) as HTMLElement[];
+      const dstChildren = Array.from(dst.children) as HTMLElement[];
+      const cLen = Math.min(srcChildren.length, dstChildren.length);
+      for (let j = 0; j < cLen; j++) {
+        const dc = dstChildren[j];
+        if (!dc) continue;
+        dc.style.setProperty('flex-shrink', '0', 'important');
+        dc.style.setProperty('box-sizing', 'border-box', 'important');
+      }
+    }
+  }
+
+  // 5. Freeze SVG circular charts: copy computed strokeDasharray/Dashoffset
+  const srcCircles = sourceRoot.querySelectorAll<SVGCircleElement>('svg circle, svg path');
+  const dstCircles = cloneRoot.querySelectorAll<SVGCircleElement>('svg circle, svg path');
+  const sLen = Math.min(srcCircles.length, dstCircles.length);
+  for (let i = 0; i < sLen; i++) {
+    const s = srcCircles[i];
+    const d = dstCircles[i];
+    if (!s || !d) continue;
+    const cs = window.getComputedStyle(s as unknown as Element);
+    const dashArray = cs.strokeDasharray;
+    const dashOffset = cs.strokeDashoffset;
+    if (dashArray && dashArray !== 'none') {
+      (d as unknown as HTMLElement).style.setProperty('stroke-dasharray', dashArray, 'important');
+      d.setAttribute('stroke-dasharray', dashArray);
+    }
+    if (dashOffset) {
+      (d as unknown as HTMLElement).style.setProperty('stroke-dashoffset', dashOffset, 'important');
+      d.setAttribute('stroke-dashoffset', dashOffset);
+    }
+    (d as unknown as HTMLElement).style.setProperty('animation', 'none', 'important');
+    (d as unknown as HTMLElement).style.setProperty('transition', 'none', 'important');
+  }
+};
+
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -70,21 +168,27 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       throw new Error('Resume preview not found. Make sure the preview is visible.');
     }
 
+    // Wait for all fonts (incl. DM Sans / Plus Jakarta Sans) to be fully ready
     if ('fonts' in document) {
       try { await (document as any).fonts.ready; } catch {}
     }
-    await wait(200);
+    // Extra delay so custom fonts are applied + any layout settles
+    await wait(500);
 
     const scale = 3;
-    const A4_WIDTH = 794;
+    const A4_WIDTH = 794;          // CSS px
+    const TARGET_PX_WIDTH = 2382;  // 794 * 3 — identical for every template
     const color = safeColor(data?.design?.primaryColor);
 
-    // Force A4 width for proper render
+    // Force A4 width on the LIVE node so scrollHeight reflects 794px layout.
+    // The panel hides the preview during capture, so the user sees no UI change.
     const prevWidth = cv.style.width;
     const prevMaxWidth = cv.style.maxWidth;
-    cv.style.width = A4_WIDTH + 'px';
-    cv.style.maxWidth = A4_WIDTH + 'px';
-    await wait(150);
+    const prevMinWidth = cv.style.minWidth;
+    cv.style.setProperty('width', A4_WIDTH + 'px', 'important');
+    cv.style.setProperty('max-width', A4_WIDTH + 'px', 'important');
+    cv.style.setProperty('min-width', A4_WIDTH + 'px', 'important');
+    await wait(200);
     const contentHeight = cv.scrollHeight;
 
     try {
@@ -103,22 +207,47 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         onclone: (clonedDoc: Document) => {
           const clonedEl = clonedDoc.getElementById('cv-output');
           if (clonedEl) {
-            clonedEl.style.width = A4_WIDTH + 'px';
-            clonedEl.style.maxWidth = A4_WIDTH + 'px';
+            // 1. Sanitize gradients (8-digit hex → rgba) to avoid addColorStop NaN
             sanitizeGradients(clonedEl, color);
+            // 2. Stabilize: fixed width, freeze bars/SVG, lock flex/grid children
+            stabilizeForExport(cv, clonedEl, A4_WIDTH);
           }
         },
       });
 
       cv.style.width = prevWidth;
       cv.style.maxWidth = prevMaxWidth;
+      cv.style.minWidth = prevMinWidth;
 
-      return {
-        dataUrl: canvas.toDataURL('image/png', 1.0),
-        width: canvas.width,
-        height: canvas.height,
-      };
+      // Guarantee identical output width across templates: normalize to 2382px
+      let outDataUrl = canvas.toDataURL('image/png', 1.0);
+      let outWidth = canvas.width;
+      let outHeight = canvas.height;
+
+      if (canvas.width !== TARGET_PX_WIDTH) {
+        const ratio = TARGET_PX_WIDTH / canvas.width;
+        const normalized = document.createElement('canvas');
+        normalized.width = TARGET_PX_WIDTH;
+        normalized.height = Math.round(canvas.height * ratio);
+        const ctx = normalized.getContext('2d');
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, normalized.width, normalized.height);
+          ctx.drawImage(canvas, 0, 0, normalized.width, normalized.height);
+          outDataUrl = normalized.toDataURL('image/png', 1.0);
+          outWidth = normalized.width;
+          outHeight = normalized.height;
+        }
+      }
+
+      return { dataUrl: outDataUrl, width: outWidth, height: outHeight };
     } finally {
+      // Safety: ensure live width styles are restored even if html2canvas threw
+      cv.style.width = prevWidth;
+      cv.style.maxWidth = prevMaxWidth;
+      cv.style.minWidth = prevMinWidth;
       setHidden(false);
       if (wasHidden && previewParent) {
         previewParent.classList.add('hidden');
