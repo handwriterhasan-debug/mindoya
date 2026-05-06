@@ -244,6 +244,10 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
 
       return { dataUrl: outDataUrl, width: outWidth, height: outHeight };
     } finally {
+      // Safety: ensure live width styles are restored even if html2canvas threw
+      cv.style.width = prevWidth;
+      cv.style.maxWidth = prevMaxWidth;
+      cv.style.minWidth = prevMinWidth;
       setHidden(false);
       if (wasHidden && previewParent) {
         previewParent.classList.add('hidden');
