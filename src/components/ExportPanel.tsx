@@ -168,21 +168,27 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       throw new Error('Resume preview not found. Make sure the preview is visible.');
     }
 
+    // Wait for all fonts (incl. DM Sans / Plus Jakarta Sans) to be fully ready
     if ('fonts' in document) {
       try { await (document as any).fonts.ready; } catch {}
     }
-    await wait(200);
+    // Extra delay so custom fonts are applied + any layout settles
+    await wait(500);
 
     const scale = 3;
-    const A4_WIDTH = 794;
+    const A4_WIDTH = 794;          // CSS px
+    const TARGET_PX_WIDTH = 2382;  // 794 * 3 — identical for every template
     const color = safeColor(data?.design?.primaryColor);
 
-    // Force A4 width for proper render
+    // Force A4 width on the LIVE node so scrollHeight reflects 794px layout.
+    // The panel hides the preview during capture, so the user sees no UI change.
     const prevWidth = cv.style.width;
     const prevMaxWidth = cv.style.maxWidth;
-    cv.style.width = A4_WIDTH + 'px';
-    cv.style.maxWidth = A4_WIDTH + 'px';
-    await wait(150);
+    const prevMinWidth = cv.style.minWidth;
+    cv.style.setProperty('width', A4_WIDTH + 'px', 'important');
+    cv.style.setProperty('max-width', A4_WIDTH + 'px', 'important');
+    cv.style.setProperty('min-width', A4_WIDTH + 'px', 'important');
+    await wait(200);
     const contentHeight = cv.scrollHeight;
 
     try {
@@ -201,21 +207,42 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         onclone: (clonedDoc: Document) => {
           const clonedEl = clonedDoc.getElementById('cv-output');
           if (clonedEl) {
-            clonedEl.style.width = A4_WIDTH + 'px';
-            clonedEl.style.maxWidth = A4_WIDTH + 'px';
+            // 1. Sanitize gradients (8-digit hex → rgba) to avoid addColorStop NaN
             sanitizeGradients(clonedEl, color);
+            // 2. Stabilize: fixed width, freeze bars/SVG, lock flex/grid children
+            stabilizeForExport(cv, clonedEl, A4_WIDTH);
           }
         },
       });
 
       cv.style.width = prevWidth;
       cv.style.maxWidth = prevMaxWidth;
+      cv.style.minWidth = prevMinWidth;
 
-      return {
-        dataUrl: canvas.toDataURL('image/png', 1.0),
-        width: canvas.width,
-        height: canvas.height,
-      };
+      // Guarantee identical output width across templates: normalize to 2382px
+      let outDataUrl = canvas.toDataURL('image/png', 1.0);
+      let outWidth = canvas.width;
+      let outHeight = canvas.height;
+
+      if (canvas.width !== TARGET_PX_WIDTH) {
+        const ratio = TARGET_PX_WIDTH / canvas.width;
+        const normalized = document.createElement('canvas');
+        normalized.width = TARGET_PX_WIDTH;
+        normalized.height = Math.round(canvas.height * ratio);
+        const ctx = normalized.getContext('2d');
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, normalized.width, normalized.height);
+          ctx.drawImage(canvas, 0, 0, normalized.width, normalized.height);
+          outDataUrl = normalized.toDataURL('image/png', 1.0);
+          outWidth = normalized.width;
+          outHeight = normalized.height;
+        }
+      }
+
+      return { dataUrl: outDataUrl, width: outWidth, height: outHeight };
     } finally {
       setHidden(false);
       if (wasHidden && previewParent) {
