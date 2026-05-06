@@ -33,6 +33,104 @@ const sanitizeGradients = (root: HTMLElement, color: string) => {
   });
 };
 
+/**
+ * Stabilize the cloned CV DOM for consistent export across all templates.
+ * - Force 794px width on the root and any nested CV containers
+ * - Freeze percentage-based progress bars at their final pixel widths
+ * - Freeze SVG circular charts (strokeDashoffset animations) at final values
+ * - Prevent flex/grid children from collapsing or reflowing
+ * NOTE: Receives BOTH the live source element (to read computed values from)
+ * and the cloned target element (to mutate). This guarantees we capture the
+ * truly-rendered final state regardless of any in-flight CSS animation.
+ */
+const stabilizeForExport = (
+  sourceRoot: HTMLElement,
+  cloneRoot: HTMLElement,
+  targetWidth: number,
+) => {
+  // 1. Force fixed width on root + any inner CV wrapper
+  cloneRoot.style.setProperty('width', `${targetWidth}px`, 'important');
+  cloneRoot.style.setProperty('max-width', `${targetWidth}px`, 'important');
+  cloneRoot.style.setProperty('min-width', `${targetWidth}px`, 'important');
+  cloneRoot.style.setProperty('overflow', 'visible', 'important');
+
+  const innerWrappers = cloneRoot.querySelectorAll<HTMLElement>(
+    '.cv-content-wrapper, [data-cv-page], [data-cv-root]'
+  );
+  innerWrappers.forEach((w) => {
+    w.style.setProperty('width', `${targetWidth}px`, 'important');
+    w.style.setProperty('max-width', `${targetWidth}px`, 'important');
+    w.style.setProperty('min-width', `${targetWidth}px`, 'important');
+    w.style.setProperty('overflow', 'visible', 'important');
+  });
+
+  const sourceAll = Array.from(sourceRoot.querySelectorAll<HTMLElement>('*'));
+  const cloneAll = Array.from(cloneRoot.querySelectorAll<HTMLElement>('*'));
+  const len = Math.min(sourceAll.length, cloneAll.length);
+
+  for (let i = 0; i < len; i++) {
+    const src = sourceAll[i];
+    const dst = cloneAll[i];
+    if (!src || !dst) continue;
+
+    const cs = window.getComputedStyle(src);
+
+    // 2. Kill all transitions/animations in the clone for stable capture
+    dst.style.setProperty('transition', 'none', 'important');
+    dst.style.setProperty('animation', 'none', 'important');
+
+    // 3. Freeze progress-bar-like elements (percent widths inside narrow bars)
+    //    Heuristic: small height, percentage-driven width, or framer-motion bars.
+    const isProgressBar =
+      dst.matches('[data-progress-bar], .progress-bar, [role="progressbar"] > *') ||
+      (cs.width.endsWith('%') && parseFloat(cs.height) > 0 && parseFloat(cs.height) <= 12);
+
+    if (isProgressBar || (src.style && src.style.width && src.style.width.includes('%'))) {
+      const finalWidthPx = src.getBoundingClientRect().width;
+      if (Number.isFinite(finalWidthPx) && finalWidthPx > 0) {
+        dst.style.setProperty('width', `${finalWidthPx}px`, 'important');
+      }
+    }
+
+    // 4. Stabilize flex/grid: prevent children from collapsing
+    const display = cs.display;
+    if (display === 'flex' || display === 'inline-flex' || display === 'grid' || display === 'inline-grid') {
+      const srcChildren = Array.from(src.children) as HTMLElement[];
+      const dstChildren = Array.from(dst.children) as HTMLElement[];
+      const cLen = Math.min(srcChildren.length, dstChildren.length);
+      for (let j = 0; j < cLen; j++) {
+        const dc = dstChildren[j];
+        if (!dc) continue;
+        dc.style.setProperty('flex-shrink', '0', 'important');
+        dc.style.setProperty('box-sizing', 'border-box', 'important');
+      }
+    }
+  }
+
+  // 5. Freeze SVG circular charts: copy computed strokeDasharray/Dashoffset
+  const srcCircles = sourceRoot.querySelectorAll<SVGCircleElement>('svg circle, svg path');
+  const dstCircles = cloneRoot.querySelectorAll<SVGCircleElement>('svg circle, svg path');
+  const sLen = Math.min(srcCircles.length, dstCircles.length);
+  for (let i = 0; i < sLen; i++) {
+    const s = srcCircles[i];
+    const d = dstCircles[i];
+    if (!s || !d) continue;
+    const cs = window.getComputedStyle(s as unknown as Element);
+    const dashArray = cs.strokeDasharray;
+    const dashOffset = cs.strokeDashoffset;
+    if (dashArray && dashArray !== 'none') {
+      (d as unknown as HTMLElement).style.setProperty('stroke-dasharray', dashArray, 'important');
+      d.setAttribute('stroke-dasharray', dashArray);
+    }
+    if (dashOffset) {
+      (d as unknown as HTMLElement).style.setProperty('stroke-dashoffset', dashOffset, 'important');
+      d.setAttribute('stroke-dashoffset', dashOffset);
+    }
+    (d as unknown as HTMLElement).style.setProperty('animation', 'none', 'important');
+    (d as unknown as HTMLElement).style.setProperty('transition', 'none', 'important');
+  }
+};
+
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
