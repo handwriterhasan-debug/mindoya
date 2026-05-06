@@ -76,9 +76,16 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     await wait(200);
 
     const scale = 3;
-    const width = cv.scrollWidth;
-    const height = cv.scrollHeight;
+    const A4_WIDTH = 794;
     const color = safeColor(data?.design?.primaryColor);
+
+    // Force A4 width for proper render
+    const prevWidth = cv.style.width;
+    const prevMaxWidth = cv.style.maxWidth;
+    cv.style.width = A4_WIDTH + 'px';
+    cv.style.maxWidth = A4_WIDTH + 'px';
+    await wait(150);
+    const contentHeight = cv.scrollHeight;
 
     try {
       const html2canvas = (await import('html2canvas')).default;
@@ -89,17 +96,22 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        width,
-        height,
-        windowWidth: width,
-        windowHeight: height,
+        width: A4_WIDTH,
+        height: contentHeight,
+        windowWidth: A4_WIDTH,
+        windowHeight: contentHeight,
         onclone: (clonedDoc: Document) => {
           const clonedEl = clonedDoc.getElementById('cv-output');
           if (clonedEl) {
+            clonedEl.style.width = A4_WIDTH + 'px';
+            clonedEl.style.maxWidth = A4_WIDTH + 'px';
             sanitizeGradients(clonedEl, color);
           }
         },
       });
+
+      cv.style.width = prevWidth;
+      cv.style.maxWidth = prevMaxWidth;
 
       return {
         dataUrl: canvas.toDataURL('image/png', 1.0),
@@ -129,14 +141,21 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       const imgWidth = pageWidth;
       const imgHeight = (imgPxH * imgWidth) / imgPxW;
 
+      // Only add pages that have actual content - no blank pages
       if (imgHeight <= pageHeight) {
-        pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+        // Fits on one page - trim PDF height to content
+        const singlePagePdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pageWidth, imgHeight] });
+        singlePagePdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+        singlePagePdf.save('resume.pdf');
+        setDone(true);
+        toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
+        return;
       } else {
         let heightLeft = imgHeight;
         let position = 0;
         pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
-        while (heightLeft > 0) {
+        while (heightLeft > 2) {
           position = heightLeft - imgHeight;
           pdf.addPage();
           pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
