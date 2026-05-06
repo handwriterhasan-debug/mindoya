@@ -355,7 +355,7 @@ const MinimalSwiss = ({ data, color, fontFamily, animated, showPhoto, photoRadiu
   const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
 
   return (
-    <div className="bg-white text-gray-900 p-10" style={{ fontFamily: "'Helvetica Neue', 'Arial', sans-serif" }}>
+    <div className="bg-white text-gray-900 p-10" style={{ fontFamily: fontFamily || "'Helvetica Neue', 'Arial', sans-serif" }}>
       <Wrap {...aProps(0)} className="mb-10">
         <div className="flex items-end gap-5">
           {showPhoto && <div className="w-16 h-16 overflow-hidden shrink-0" style={{ borderRadius: photoRadius }}><img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" /></div>}
@@ -406,7 +406,7 @@ const TechDeveloper = ({ data, color, fontFamily, animated, showPhoto, photoRadi
   const monoFont = "'Courier New', 'Consolas', monospace";
 
   return (
-    <div className="bg-[#0d1117] text-[#c9d1d9] p-8" style={{ fontFamily: "'Segoe UI', sans-serif" }}>
+    <div className="bg-[#0d1117] text-[#c9d1d9] p-8" style={{ fontFamily: fontFamily || "'Segoe UI', sans-serif" }}>
       <Wrap {...aProps(0)} className="mb-6 pb-4 border-b border-[#21262d]">
         <div className="flex items-center gap-4">
           {showPhoto && <div className="w-16 h-16 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, border: '2px solid #30363d' }}><img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" /></div>}
@@ -590,7 +590,7 @@ const ClassicCorporate = ({ data, color, fontFamily, animated, showPhoto, photoR
   const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
 
   return (
-    <div className="bg-white text-gray-900 p-8" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+    <div className="bg-white text-gray-900 p-8" style={{ fontFamily: fontFamily || "'Georgia', 'Times New Roman', serif" }}>
       <Wrap {...aProps(0)} className="text-center mb-6 pb-4 border-b-2 border-gray-900">
         <h1 className="text-2xl font-bold tracking-wide uppercase">{p.fullName || 'Your Name'}</h1>
         {p.jobTitle && <p className="text-sm text-gray-600 mt-1">{p.jobTitle}</p>}
@@ -758,7 +758,7 @@ const SciFiTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadi
   const bgCard = '#111827';
 
   return (
-    <div className="text-gray-200" style={{ fontFamily: "'Consolas', 'Courier New', monospace", backgroundColor: bgDark, backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(0,240,255,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,240,255,0.03) 0%, transparent 50%)' }}>
+    <div className="text-gray-200" style={{ fontFamily: fontFamily || "'Consolas', 'Courier New', monospace", backgroundColor: bgDark, backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(0,240,255,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,240,255,0.03) 0%, transparent 50%)' }}>
       {/* Header with cyber grid */}
       <Wrap {...aProps(0)} className="p-7 pb-5 relative" style={{ borderBottom: `1px solid ${hexToRgba(neonColor, 0.188)}` }}>
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `linear-gradient(${hexToRgba(neonColor, 0.125)} 1px, transparent 1px), linear-gradient(90deg, ${hexToRgba(neonColor, 0.125)} 1px, transparent 1px)`, backgroundSize: '20px 20px' }} />
@@ -904,7 +904,7 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
   );
 
   return (
-    <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", backgroundColor: bgMain }}>
+    <div style={{ fontFamily: fontFamily || "'DM Sans', 'Inter', sans-serif", backgroundColor: bgMain }}>
       {/* Premium dark header - no radial gradients for export compatibility */}
       <Wrap {...aProps(0)} style={{ background: `linear-gradient(160deg, ${bgDark} 0%, #1e1b4b 50%, ${bgDark} 100%)` }}>
         <div className="p-8 pb-0">
