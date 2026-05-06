@@ -49,9 +49,23 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     setHidden(true);
     await wait(80);
 
+    // Force-show preview if hidden (mobile layout hides it)
     const cv = document.getElementById('cv-output');
+    const previewParent = cv?.parentElement?.parentElement?.parentElement as HTMLElement | null;
+    let wasHidden = false;
+    if (previewParent && previewParent.classList.contains('hidden')) {
+      wasHidden = true;
+      previewParent.classList.remove('hidden');
+      previewParent.classList.add('block');
+      await wait(200);
+    }
+
     if (!cv) {
       setHidden(false);
+      if (wasHidden && previewParent) {
+        previewParent.classList.add('hidden');
+        previewParent.classList.remove('block');
+      }
       if (previousViewMode !== 'static') setViewMode(previousViewMode);
       throw new Error('Resume preview not found. Make sure the preview is visible.');
     }
@@ -94,6 +108,10 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       };
     } finally {
       setHidden(false);
+      if (wasHidden && previewParent) {
+        previewParent.classList.add('hidden');
+        previewParent.classList.remove('block');
+      }
       if (previousViewMode !== 'static') setViewMode(previousViewMode);
     }
   }, [viewMode, setViewMode, data]);
