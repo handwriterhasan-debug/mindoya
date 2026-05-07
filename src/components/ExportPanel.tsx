@@ -113,8 +113,51 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           if (clonedEl) {
             clonedEl.style.width = A4_WIDTH + 'px';
             clonedEl.style.maxWidth = A4_WIDTH + 'px';
+            clonedEl.style.minWidth = A4_WIDTH + 'px';
             clonedEl.style.minHeight = 'auto';
+            clonedEl.style.height = 'auto';
             clonedEl.style.overflow = 'visible';
+            clonedEl.style.transform = 'none';
+
+            // Kill all animations/transitions
+            const killStyle = clonedDoc.createElement('style');
+            killStyle.textContent = `
+              #cv-output, #cv-output *, #cv-output *::before, #cv-output *::after {
+                animation: none !important;
+                animation-duration: 0s !important;
+                animation-delay: 0s !important;
+                transition: none !important;
+                transition-duration: 0s !important;
+              }
+              #cv-output { min-height: 0 !important; }
+            `;
+            clonedDoc.head.appendChild(killStyle);
+
+            // Freeze skill progress bars: copy computed widths from live DOM
+            const liveBars = cv.querySelectorAll<HTMLElement>('[style*="width"]');
+            const cloneBars = clonedEl.querySelectorAll<HTMLElement>('[style*="width"]');
+            liveBars.forEach((live, i) => {
+              const clone = cloneBars[i];
+              if (!clone) return;
+              const w = window.getComputedStyle(live).width;
+              if (w && w !== '0px') {
+                clone.style.width = w;
+              }
+            });
+
+            // Freeze SVG circle stroke offsets from live computed values
+            const liveCircles = cv.querySelectorAll('circle');
+            const cloneCircles = clonedEl.querySelectorAll('circle');
+            liveCircles.forEach((live, i) => {
+              const clone = cloneCircles[i] as SVGCircleElement | undefined;
+              if (!clone) return;
+              const cs = window.getComputedStyle(live);
+              const dash = cs.strokeDasharray;
+              const off = cs.strokeDashoffset;
+              if (dash && dash !== 'none') clone.setAttribute('stroke-dasharray', dash);
+              if (off) clone.setAttribute('stroke-dashoffset', off);
+            });
+
             sanitizeGradients(clonedEl, color);
           }
         },
@@ -147,35 +190,16 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     try {
       const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      // Use dynamic page size matching the canvas exactly — single page, no blank space
+      const pageWidthMm = 210; // A4 width
+      const pageHeightMm = (imgPxH * pageWidthMm) / imgPxW;
 
-      const imgWidth = pageWidth;
-      const imgHeight = (imgPxH * imgWidth) / imgPxW;
-
-      // Only add pages that have actual content - no blank pages
-      if (imgHeight <= pageHeight) {
-        // Fits on one page - trim PDF height to content
-        const singlePagePdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pageWidth, imgHeight] });
-        singlePagePdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
-        singlePagePdf.save('resume.pdf');
-        setDone(true);
-        toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
-        return;
-      } else {
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
-        while (heightLeft > 2) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-          heightLeft -= pageHeight;
-        }
-      }
-
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [pageWidthMm, pageHeightMm],
+      });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
       pdf.save('resume.pdf');
       setDone(true);
       toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
