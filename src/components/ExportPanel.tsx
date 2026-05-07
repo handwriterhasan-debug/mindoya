@@ -190,35 +190,16 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     try {
       const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      // Use dynamic page size matching the canvas exactly — single page, no blank space
+      const pageWidthMm = 210; // A4 width
+      const pageHeightMm = (imgPxH * pageWidthMm) / imgPxW;
 
-      const imgWidth = pageWidth;
-      const imgHeight = (imgPxH * imgWidth) / imgPxW;
-
-      // Only add pages that have actual content - no blank pages
-      if (imgHeight <= pageHeight) {
-        // Fits on one page - trim PDF height to content
-        const singlePagePdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pageWidth, imgHeight] });
-        singlePagePdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
-        singlePagePdf.save('resume.pdf');
-        setDone(true);
-        toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
-        return;
-      } else {
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
-        while (heightLeft > 2) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-          heightLeft -= pageHeight;
-        }
-      }
-
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [pageWidthMm, pageHeightMm],
+      });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
       pdf.save('resume.pdf');
       setDone(true);
       toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
