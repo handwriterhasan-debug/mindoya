@@ -178,6 +178,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       };
     } finally {
       // Always restore live UI styles, even if export threw
+      cv.classList.remove('export-mode');
       cv.style.width = prevWidth;
       cv.style.maxWidth = prevMaxWidth;
       cv.style.minHeight = prevMinHeight;
