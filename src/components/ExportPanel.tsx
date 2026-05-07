@@ -75,9 +75,9 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     }
     await wait(200);
 
-    // Fixed A4 dimensions - ALWAYS same size/quality for every user, every template
-    const A4_WIDTH = 794;   // A4 width in px at 96dpi
-    const scale = 3;        // 3x = 2382px wide — sharp on all screens
+    // Fixed dimensions - ALWAYS same size/quality for every user, every template
+    const A4_WIDTH = 800;   // stabilized desktop width for export
+    const scale = 3;        // 3x = 2400px wide — sharp on all screens
     const color = safeColor(data?.design?.primaryColor);
 
     // Save original styles (restored in finally so live UI never stays mutated)
@@ -86,7 +86,8 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     const prevMinHeight = cv.style.minHeight;
     const prevOverflow = cv.style.overflow;
 
-    // Force exact A4 width, remove minHeight constraint
+    // Force exact width, remove minHeight constraint, enable export-mode CSS
+    cv.classList.add('export-mode');
     cv.style.width = A4_WIDTH + 'px';
     cv.style.maxWidth = A4_WIDTH + 'px';
     cv.style.minHeight = 'auto';
@@ -111,6 +112,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         onclone: (clonedDoc: Document) => {
           const clonedEl = clonedDoc.getElementById('cv-output');
           if (clonedEl) {
+            clonedEl.classList.add('export-mode');
             clonedEl.style.width = A4_WIDTH + 'px';
             clonedEl.style.maxWidth = A4_WIDTH + 'px';
             clonedEl.style.minWidth = A4_WIDTH + 'px';
@@ -176,6 +178,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       };
     } finally {
       // Always restore live UI styles, even if export threw
+      cv.classList.remove('export-mode');
       cv.style.width = prevWidth;
       cv.style.maxWidth = prevMaxWidth;
       cv.style.minHeight = prevMinHeight;

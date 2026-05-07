@@ -285,6 +285,88 @@ body.printing-cv {
   background: #ffffff !important;
 }
 
+/* ========================================================================
+   EXPORT-MODE STABILIZATION
+   Toggled by ExportPanel ONLY during html2canvas capture.
+   Goal: lock layout so the exported PNG matches the live preview pixel-for-pixel.
+   Does NOT affect normal app usage.
+   ======================================================================== */
+#cv-output.export-mode {
+  width: 800px !important;
+  max-width: 800px !important;
+  min-width: 800px !important;
+}
+
+/* Kill animations/transitions during capture */
+#cv-output.export-mode,
+#cv-output.export-mode *,
+#cv-output.export-mode *::before,
+#cv-output.export-mode *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Tags / hobbies / pill wrappers — center & align consistently */
+#cv-output.export-mode .flex.flex-wrap {
+  align-items: center;
+}
+#cv-output.export-mode span[class*="rounded-full"],
+#cv-output.export-mode span[class*="rounded-lg"][class*="px-"],
+#cv-output.export-mode span[class*="rounded"][class*="border"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Skill bar tracks — keep fill vertically centered and absolutely positioned */
+#cv-output.export-mode .h-1,
+#cv-output.export-mode .h-1\.5,
+#cv-output.export-mode .h-2 {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+#cv-output.export-mode .h-1 > div,
+#cv-output.export-mode .h-1\.5 > div,
+#cv-output.export-mode .h-2 > div {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  height: 100% !important;
+  display: block;
+}
+
+/* SVG circles — keep centered and prevent overflow clipping */
+#cv-output.export-mode svg {
+  display: block;
+  overflow: visible;
+}
+#cv-output.export-mode .relative > svg + span,
+#cv-output.export-mode .relative > svg ~ span.absolute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Header / profile rows — prevent profile image from crushing contact info */
+#cv-output.export-mode img {
+  flex-shrink: 0;
+  object-fit: cover;
+}
+#cv-output.export-mode .flex > .flex-1 {
+  min-width: 0;
+}
+
+/* Lock flex children so they don't reflow during capture */
+#cv-output.export-mode .flex > *,
+#cv-output.export-mode .grid > * {
+  box-sizing: border-box;
+}
+
 
 /* Scrollbar */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
