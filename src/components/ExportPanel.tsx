@@ -175,6 +175,12 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         height: canvas.height,
       };
     } finally {
+      // Always restore live UI styles, even if export threw
+      cv.style.width = prevWidth;
+      cv.style.maxWidth = prevMaxWidth;
+      cv.style.minHeight = prevMinHeight;
+      cv.style.overflow = prevOverflow;
+
       setHidden(false);
       if (wasHidden && previewParent) {
         previewParent.classList.add('hidden');
