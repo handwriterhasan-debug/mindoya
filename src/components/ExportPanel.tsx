@@ -80,7 +80,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     const scale = 3;        // 3x = 2382px wide — sharp on all screens
     const color = safeColor(data?.design?.primaryColor);
 
-    // Save original styles
+    // Save original styles (restored in finally so live UI never stays mutated)
     const prevWidth = cv.style.width;
     const prevMaxWidth = cv.style.maxWidth;
     const prevMinHeight = cv.style.minHeight;
@@ -175,6 +175,12 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         height: canvas.height,
       };
     } finally {
+      // Always restore live UI styles, even if export threw
+      cv.style.width = prevWidth;
+      cv.style.maxWidth = prevMaxWidth;
+      cv.style.minHeight = prevMinHeight;
+      cv.style.overflow = prevOverflow;
+
       setHidden(false);
       if (wasHidden && previewParent) {
         previewParent.classList.add('hidden');
