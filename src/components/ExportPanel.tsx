@@ -113,8 +113,51 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
           if (clonedEl) {
             clonedEl.style.width = A4_WIDTH + 'px';
             clonedEl.style.maxWidth = A4_WIDTH + 'px';
+            clonedEl.style.minWidth = A4_WIDTH + 'px';
             clonedEl.style.minHeight = 'auto';
+            clonedEl.style.height = 'auto';
             clonedEl.style.overflow = 'visible';
+            clonedEl.style.transform = 'none';
+
+            // Kill all animations/transitions
+            const killStyle = clonedDoc.createElement('style');
+            killStyle.textContent = `
+              #cv-output, #cv-output *, #cv-output *::before, #cv-output *::after {
+                animation: none !important;
+                animation-duration: 0s !important;
+                animation-delay: 0s !important;
+                transition: none !important;
+                transition-duration: 0s !important;
+              }
+              #cv-output { min-height: 0 !important; }
+            `;
+            clonedDoc.head.appendChild(killStyle);
+
+            // Freeze skill progress bars: copy computed widths from live DOM
+            const liveBars = cv.querySelectorAll<HTMLElement>('[style*="width"]');
+            const cloneBars = clonedEl.querySelectorAll<HTMLElement>('[style*="width"]');
+            liveBars.forEach((live, i) => {
+              const clone = cloneBars[i];
+              if (!clone) return;
+              const w = window.getComputedStyle(live).width;
+              if (w && w !== '0px') {
+                clone.style.width = w;
+              }
+            });
+
+            // Freeze SVG circle stroke offsets from live computed values
+            const liveCircles = cv.querySelectorAll('circle');
+            const cloneCircles = clonedEl.querySelectorAll('circle');
+            liveCircles.forEach((live, i) => {
+              const clone = cloneCircles[i] as SVGCircleElement | undefined;
+              if (!clone) return;
+              const cs = window.getComputedStyle(live);
+              const dash = cs.strokeDasharray;
+              const off = cs.strokeDashoffset;
+              if (dash && dash !== 'none') clone.setAttribute('stroke-dasharray', dash);
+              if (off) clone.setAttribute('stroke-dashoffset', off);
+            });
+
             sanitizeGradients(clonedEl, color);
           }
         },
