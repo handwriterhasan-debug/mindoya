@@ -112,6 +112,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         onclone: (clonedDoc: Document) => {
           const clonedEl = clonedDoc.getElementById('cv-output');
           if (clonedEl) {
+            clonedEl.classList.add('export-mode');
             clonedEl.style.width = A4_WIDTH + 'px';
             clonedEl.style.maxWidth = A4_WIDTH + 'px';
             clonedEl.style.minWidth = A4_WIDTH + 'px';
