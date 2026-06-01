@@ -154,6 +154,7 @@ const Library = ({ onBack, onOpenCV, onNewCV, onOpenPricing }: LibraryProps) => 
                       onClick={() => duplicateCV(cv.id)}
                       size="icon"
                       variant="outline"
+                      aria-label={`Duplicate CV ${cv.name}`}
                       className="h-8 w-8 rounded-lg shrink-0"
                       title="Duplicate"
                     >
@@ -163,11 +164,13 @@ const Library = ({ onBack, onOpenCV, onNewCV, onOpenPricing }: LibraryProps) => 
                       onClick={() => setConfirmDelete(cv.id)}
                       size="icon"
                       variant="outline"
+                      aria-label={`Delete CV ${cv.name}`}
                       className="h-8 w-8 rounded-lg shrink-0 hover:text-destructive hover:border-destructive"
                       title="Delete"
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
+
                   </div>
                 </div>
 

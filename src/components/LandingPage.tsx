@@ -33,16 +33,16 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
   return (
     <div className="min-h-screen mesh-gradient overflow-auto">
       {/* Nav */}
-      <nav className="container flex items-center justify-between py-4 px-4 gap-2">
-        <h1 className="font-heading font-extrabold text-xl sm:text-2xl gradient-text">Mindoya</h1>
+      <nav className="container flex items-center justify-between py-4 px-4 gap-2" aria-label="Primary">
+        <span className="font-heading font-extrabold text-xl sm:text-2xl gradient-text">Mindoya</span>
         <div className="flex items-center gap-1.5 sm:gap-2">
           {onOpenPricing && (
-            <Button onClick={onOpenPricing} variant="ghost" size="sm" className="h-9 text-xs px-2.5 hidden sm:inline-flex">
+            <Button onClick={onOpenPricing} variant="ghost" size="sm" aria-label="View pricing plans" className="h-9 text-xs px-2.5 hidden sm:inline-flex">
               <Crown className="w-3.5 h-3.5 mr-1" /> Pricing
             </Button>
           )}
           {onOpenLibrary && (
-            <Button onClick={onOpenLibrary} variant="outline" size="sm" className="h-9 text-xs px-2.5">
+            <Button onClick={onOpenLibrary} variant="outline" size="sm" aria-label="Open CV library" className="h-9 text-xs px-2.5">
               <LibraryIcon className="w-3.5 h-3.5 sm:mr-1" />
               <span className="hidden sm:inline">Library</span>
               {library.length > 0 && (
@@ -52,11 +52,14 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
               )}
             </Button>
           )}
-          <Button onClick={() => setShowOnboarding(true)} size="sm" className="h-9 gradient-primary text-primary-foreground btn-press glow-primary-sm text-xs px-3">
+          <Button onClick={() => setShowOnboarding(true)} size="sm" aria-label="Start building your CV" className="h-9 gradient-primary text-primary-foreground btn-press glow-primary-sm text-xs px-3">
             Build CV <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Button>
         </div>
       </nav>
+
+      <main>
+
 
       <AnimatePresence mode="wait">
         {showOnboarding ? (
@@ -76,32 +79,33 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
 
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                  <Label htmlFor="onb-fullName" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                     <User className="w-3.5 h-3.5 text-primary" /> Full Name *
                   </Label>
-                  <Input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} placeholder="John Doe" className="h-11" />
+                  <Input id="onb-fullName" value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} placeholder="John Doe" className="h-11" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                    <Label htmlFor="onb-age" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                       <Calendar className="w-3.5 h-3.5 text-primary" /> Age
                     </Label>
-                    <Input type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} placeholder="25" className="h-11" />
+                    <Input id="onb-age" type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} placeholder="25" className="h-11" />
                   </div>
                   <div>
-                    <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                    <Label htmlFor="onb-country" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                       <MapPin className="w-3.5 h-3.5 text-primary" /> Country
                     </Label>
-                    <Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="USA" className="h-11" />
+                    <Input id="onb-country" value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="USA" className="h-11" />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                  <Label htmlFor="onb-email" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                     <Mail className="w-3.5 h-3.5 text-primary" /> Email (optional)
                   </Label>
-                  <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" className="h-11" />
+                  <Input id="onb-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" className="h-11" />
                 </div>
               </div>
+
 
               <Button onClick={handleSubmit} disabled={!form.fullName.trim()} className="w-full mt-6 h-12 gradient-primary text-primary-foreground btn-press glow-primary-sm text-base">
                 Start Building <ArrowRight className="w-5 h-5 ml-2" />
@@ -185,9 +189,11 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
           </motion.div>
         )}
       </AnimatePresence>
+      </main>
 
       <VorynixBadge />
     </div>
+
   );
 };
 
