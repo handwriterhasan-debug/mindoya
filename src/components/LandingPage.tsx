@@ -79,32 +79,33 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
 
               <div className="space-y-4">
                 <div>
-                  <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                  <Label htmlFor="onb-fullName" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                     <User className="w-3.5 h-3.5 text-primary" /> Full Name *
                   </Label>
-                  <Input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} placeholder="John Doe" className="h-11" />
+                  <Input id="onb-fullName" value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} placeholder="John Doe" className="h-11" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                    <Label htmlFor="onb-age" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                       <Calendar className="w-3.5 h-3.5 text-primary" /> Age
                     </Label>
-                    <Input type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} placeholder="25" className="h-11" />
+                    <Input id="onb-age" type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} placeholder="25" className="h-11" />
                   </div>
                   <div>
-                    <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                    <Label htmlFor="onb-country" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                       <MapPin className="w-3.5 h-3.5 text-primary" /> Country
                     </Label>
-                    <Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="USA" className="h-11" />
+                    <Input id="onb-country" value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} placeholder="USA" className="h-11" />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                  <Label htmlFor="onb-email" className="text-sm font-medium flex items-center gap-2 mb-1.5">
                     <Mail className="w-3.5 h-3.5 text-primary" /> Email (optional)
                   </Label>
-                  <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" className="h-11" />
+                  <Input id="onb-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" className="h-11" />
                 </div>
               </div>
+
 
               <Button onClick={handleSubmit} disabled={!form.fullName.trim()} className="w-full mt-6 h-12 gradient-primary text-primary-foreground btn-press glow-primary-sm text-base">
                 Start Building <ArrowRight className="w-5 h-5 ml-2" />
@@ -188,9 +189,11 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
           </motion.div>
         )}
       </AnimatePresence>
+      </main>
 
       <VorynixBadge />
     </div>
+
   );
 };
 

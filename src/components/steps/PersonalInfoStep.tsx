@@ -36,7 +36,7 @@ const PersonalInfoStep = () => {
         <label className="cursor-pointer group">
           <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden group-hover:border-primary/50 transition-colors bg-[hsl(var(--ios-input-bg))]">
             {p.profileImage ? (
-              <img src={p.profileImage} alt="Profile" className="w-full h-full object-cover" />
+              <img src={p.profileImage} alt="Profile photo preview" className="w-full h-full object-cover" />
             ) : (
               <Camera className="w-7 h-7 text-muted-foreground" />
             )}

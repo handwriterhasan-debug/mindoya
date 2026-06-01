@@ -12,7 +12,7 @@ const VorynixBadge = () => {
         onClick={() => setOpen(true)}
         className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1a1145]/90 backdrop-blur-md border border-purple-500/30 shadow-lg shadow-purple-500/10 hover:shadow-purple-500/20 hover:border-purple-400/50 transition-all duration-300 group"
       >
-        <img src={vorynixLogo} alt="Vorynix" className="w-6 h-6 rounded-md" />
+        <img src={vorynixLogo} alt="Vorynix studio logo" className="w-6 h-6 rounded-md" />
         <span className="text-[11px] font-semibold text-purple-200 group-hover:text-white transition-colors">
           Powered by <span className="text-purple-400 font-bold">Vorynix</span>
         </span>
@@ -23,7 +23,7 @@ const VorynixBadge = () => {
           <div className="relative">
             {/* Header with logo */}
             <div className="flex flex-col items-center pt-8 pb-4 px-6">
-              <img src={vorynixLogo} alt="Vorynix" className="w-24 h-24 rounded-2xl shadow-2xl shadow-purple-500/30 mb-4" />
+              <img src={vorynixLogo} alt="Vorynix studio logo" className="w-24 h-24 rounded-2xl shadow-2xl shadow-purple-500/30 mb-4" />
               <DialogHeader>
                 <DialogTitle className="text-center text-2xl font-bold text-white tracking-tight">
                   Vorynix
