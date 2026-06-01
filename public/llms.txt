@@ -1,0 +1,9 @@
+# Mindoya
+
+> Mindoya is an AI-powered resume builder by Vorynix. Create stunning, ATS-friendly CVs in minutes with beautiful templates and instant PDF & PNG export.
+
+Mindoya helps job seekers craft professional resumes quickly using AI enhancements, 12 premium templates, customizable themes and fonts, skill infographics, and one-click export. Built by Hasan Zai, founder of Vorynix.
+
+## Pages
+
+- [Home](/): Landing page with overview, features, and CV builder entry point.
