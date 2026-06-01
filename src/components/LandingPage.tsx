@@ -33,16 +33,16 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
   return (
     <div className="min-h-screen mesh-gradient overflow-auto">
       {/* Nav */}
-      <nav className="container flex items-center justify-between py-4 px-4 gap-2">
-        <h1 className="font-heading font-extrabold text-xl sm:text-2xl gradient-text">Mindoya</h1>
+      <nav className="container flex items-center justify-between py-4 px-4 gap-2" aria-label="Primary">
+        <span className="font-heading font-extrabold text-xl sm:text-2xl gradient-text">Mindoya</span>
         <div className="flex items-center gap-1.5 sm:gap-2">
           {onOpenPricing && (
-            <Button onClick={onOpenPricing} variant="ghost" size="sm" className="h-9 text-xs px-2.5 hidden sm:inline-flex">
+            <Button onClick={onOpenPricing} variant="ghost" size="sm" aria-label="View pricing plans" className="h-9 text-xs px-2.5 hidden sm:inline-flex">
               <Crown className="w-3.5 h-3.5 mr-1" /> Pricing
             </Button>
           )}
           {onOpenLibrary && (
-            <Button onClick={onOpenLibrary} variant="outline" size="sm" className="h-9 text-xs px-2.5">
+            <Button onClick={onOpenLibrary} variant="outline" size="sm" aria-label="Open CV library" className="h-9 text-xs px-2.5">
               <LibraryIcon className="w-3.5 h-3.5 sm:mr-1" />
               <span className="hidden sm:inline">Library</span>
               {library.length > 0 && (
@@ -52,11 +52,14 @@ const LandingPage = ({ onStart, onOpenLibrary, onOpenPricing }: LandingPageProps
               )}
             </Button>
           )}
-          <Button onClick={() => setShowOnboarding(true)} size="sm" className="h-9 gradient-primary text-primary-foreground btn-press glow-primary-sm text-xs px-3">
+          <Button onClick={() => setShowOnboarding(true)} size="sm" aria-label="Start building your CV" className="h-9 gradient-primary text-primary-foreground btn-press glow-primary-sm text-xs px-3">
             Build CV <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Button>
         </div>
       </nav>
+
+      <main>
+
 
       <AnimatePresence mode="wait">
         {showOnboarding ? (
