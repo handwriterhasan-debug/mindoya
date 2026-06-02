@@ -105,11 +105,12 @@ const SkillsSection = ({ skills, color, animated }: { skills: any[]; color: stri
               <span className="text-gray-400 text-[10px]">{skill.level}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-              <motion.div className="h-full rounded-full" style={{ backgroundColor: color }}
+              <motion.div className="h-full rounded-full" style={{ backgroundColor: color, width: `${skill.level}%` }}
                 initial={animated ? { width: 0 } : { width: `${skill.level}%` }}
                 animate={{ width: `${skill.level}%` }}
                 transition={{ duration: 0.8, delay: 0.5 + i * 0.1 }} />
             </div>
+
           </div>
         ))}
       </div>
