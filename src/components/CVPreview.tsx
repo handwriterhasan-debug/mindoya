@@ -105,11 +105,12 @@ const SkillsSection = ({ skills, color, animated }: { skills: any[]; color: stri
               <span className="text-gray-400 text-[10px]">{skill.level}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-              <motion.div className="h-full rounded-full" style={{ backgroundColor: color }}
+              <motion.div className="h-full rounded-full" style={{ backgroundColor: color, width: `${skill.level}%` }}
                 initial={animated ? { width: 0 } : { width: `${skill.level}%` }}
                 animate={{ width: `${skill.level}%` }}
                 transition={{ duration: 0.8, delay: 0.5 + i * 0.1 }} />
             </div>
+
           </div>
         ))}
       </div>
@@ -132,11 +133,13 @@ const LanguagesSection = ({ languages, color, animated }: { languages: any[]; co
                 <circle cx="50" cy="50" r="42" fill="none" stroke="#f0f0f0" strokeWidth="7" />
                 <motion.circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="7"
                   strokeDasharray="264"
+                  strokeDashoffset={264 - (264 * lang.level / 100)}
                   initial={animated ? { strokeDashoffset: 264 } : { strokeDashoffset: 264 - (264 * lang.level / 100) }}
                   animate={{ strokeDashoffset: 264 - (264 * lang.level / 100) }}
                   transition={{ duration: 1, delay: 0.6 + i * 0.15 }}
                   strokeLinecap="round" />
               </svg>
+
               <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-gray-700">{lang.level}%</span>
             </div>
             <div>
@@ -503,9 +506,11 @@ const InfographicTemplate = ({ data, color, fontFamily, animated, showPhoto, pho
                   <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                     <circle cx="50" cy="50" r="42" fill="none" stroke="#f0f0f0" strokeWidth="8" />
                     <motion.circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="8" strokeDasharray="264"
+                      strokeDashoffset={264 - (264 * s.level / 100)}
                       initial={animated ? { strokeDashoffset: 264 } : { strokeDashoffset: 264 - (264 * s.level / 100) }}
                       animate={{ strokeDashoffset: 264 - (264 * s.level / 100) }}
                       transition={{ duration: 0.8, delay: 0.3 + i * 0.1 }} strokeLinecap="round" />
+
                   </svg>
                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold">{s.level}%</span>
                 </div>
