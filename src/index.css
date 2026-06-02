@@ -340,10 +340,25 @@ body.printing-cv {
   display: block;
 }
 
-/* SVG circles — keep centered and prevent overflow clipping */
-#cv-output.export-mode svg {
+/* SVG charts (circles in skill rings, language rings) — keep centered */
+#cv-output.export-mode svg[viewBox] {
   display: block;
   overflow: visible;
+}
+/* Icon SVGs (lucide) inside flex rows — keep them aligned with text */
+#cv-output.export-mode .flex svg:not([viewBox="0 0 100 100"]),
+#cv-output.export-mode .inline-flex svg:not([viewBox="0 0 100 100"]) {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
+}
+/* Contact / socials rows — force inline-flex so icons sit next to text, not above */
+#cv-output.export-mode .flex.flex-wrap > span,
+#cv-output.export-mode .flex.items-center > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 #cv-output.export-mode .relative > svg + span,
 #cv-output.export-mode .relative > svg ~ span.absolute {
@@ -366,6 +381,7 @@ body.printing-cv {
 #cv-output.export-mode .grid > * {
   box-sizing: border-box;
 }
+
 
 
 /* Scrollbar */
