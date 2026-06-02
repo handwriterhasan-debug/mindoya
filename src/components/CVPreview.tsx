@@ -133,11 +133,13 @@ const LanguagesSection = ({ languages, color, animated }: { languages: any[]; co
                 <circle cx="50" cy="50" r="42" fill="none" stroke="#f0f0f0" strokeWidth="7" />
                 <motion.circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="7"
                   strokeDasharray="264"
+                  strokeDashoffset={264 - (264 * lang.level / 100)}
                   initial={animated ? { strokeDashoffset: 264 } : { strokeDashoffset: 264 - (264 * lang.level / 100) }}
                   animate={{ strokeDashoffset: 264 - (264 * lang.level / 100) }}
                   transition={{ duration: 1, delay: 0.6 + i * 0.15 }}
                   strokeLinecap="round" />
               </svg>
+
               <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-gray-700">{lang.level}%</span>
             </div>
             <div>
