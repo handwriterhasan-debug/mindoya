@@ -292,12 +292,11 @@ body.printing-cv {
    Does NOT affect normal app usage.
    ======================================================================== */
 #cv-output.export-mode {
-  width: 800px !important;
-  max-width: 800px !important;
-  min-width: 800px !important;
+  background: #ffffff !important;
+  contain: layout style paint;
 }
 
-/* Kill animations/transitions during capture */
+/* Keep clone static during capture */
 #cv-output.export-mode,
 #cv-output.export-mode *,
 #cv-output.export-mode *::before,
@@ -306,77 +305,23 @@ body.printing-cv {
   transition: none !important;
 }
 
-/* Tags / hobbies / pill wrappers — center & align consistently */
-#cv-output.export-mode .flex.flex-wrap {
-  align-items: center;
-}
-#cv-output.export-mode span[class*="rounded-full"],
-#cv-output.export-mode span[class*="rounded-lg"][class*="px-"],
-#cv-output.export-mode span[class*="rounded"][class*="border"] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-/* Skill bar tracks — keep fill vertically centered and absolutely positioned */
-#cv-output.export-mode .h-1,
-#cv-output.export-mode .h-1\.5,
-#cv-output.export-mode .h-2 {
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-#cv-output.export-mode .h-1 > div,
-#cv-output.export-mode .h-1\.5 > div,
-#cv-output.export-mode .h-2 > div {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  height: 100% !important;
-  display: block;
-}
-
-/* SVG charts (circles in skill rings, language rings) — keep centered */
-#cv-output.export-mode svg[viewBox] {
-  display: block;
-  overflow: visible;
-}
-/* Icon SVGs (lucide) inside flex rows — keep them aligned with text */
-#cv-output.export-mode .flex svg:not([viewBox="0 0 100 100"]),
-#cv-output.export-mode .inline-flex svg:not([viewBox="0 0 100 100"]) {
-  display: inline-block !important;
-  vertical-align: middle !important;
-  flex-shrink: 0 !important;
-}
-/* Contact / socials rows — force inline-flex so icons sit next to text, not above */
-#cv-output.export-mode .flex.flex-wrap > span,
-#cv-output.export-mode .flex.items-center > span {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-#cv-output.export-mode .relative > svg + span,
-#cv-output.export-mode .relative > svg ~ span.absolute {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Header / profile rows — prevent profile image from crushing contact info */
+/* Preserve exact media sizing */
 #cv-output.export-mode img {
+  display: block;
   flex-shrink: 0;
   object-fit: cover;
 }
+
+#cv-output.export-mode svg {
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+
 #cv-output.export-mode .flex > .flex-1 {
   min-width: 0;
 }
 
-/* Lock flex children so they don't reflow during capture */
+/* Keep cloned layout deterministic without changing the template structure */
 #cv-output.export-mode .flex > *,
 #cv-output.export-mode .grid > * {
   box-sizing: border-box;

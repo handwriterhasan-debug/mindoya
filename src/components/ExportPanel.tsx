@@ -33,6 +33,108 @@ const sanitizeGradients = (root: HTMLElement, color: string) => {
   });
 };
 
+const LAYOUT_SNAPSHOT_PROPS = [
+  'display',
+  'position',
+  'box-sizing',
+  'width',
+  'height',
+  'min-width',
+  'max-width',
+  'min-height',
+  'max-height',
+  'flex',
+  'flex-basis',
+  'flex-grow',
+  'flex-shrink',
+  'flex-wrap',
+  'align-items',
+  'align-self',
+  'justify-content',
+  'gap',
+  'row-gap',
+  'column-gap',
+  'grid-template-columns',
+  'grid-template-rows',
+  'grid-column',
+  'grid-row',
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
+  'margin-top',
+  'margin-right',
+  'margin-bottom',
+  'margin-left',
+  'border-top-width',
+  'border-right-width',
+  'border-bottom-width',
+  'border-left-width',
+  'border-top-style',
+  'border-right-style',
+  'border-bottom-style',
+  'border-left-style',
+  'border-top-color',
+  'border-right-color',
+  'border-bottom-color',
+  'border-left-color',
+  'border-radius',
+  'overflow',
+  'overflow-x',
+  'overflow-y',
+  'white-space',
+  'line-height',
+  'font-size',
+  'font-weight',
+  'font-family',
+  'letter-spacing',
+  'text-align',
+  'text-transform',
+  'object-fit',
+  'object-position',
+  'vertical-align',
+  'transform',
+  'transform-origin',
+] as const;
+
+const freezeExportSnapshot = (liveRoot: HTMLElement, clonedRoot: HTMLElement) => {
+  const liveNodes = [liveRoot, ...Array.from(liveRoot.querySelectorAll<HTMLElement>(' *'.trim()))];
+  const clonedNodes = [clonedRoot, ...Array.from(clonedRoot.querySelectorAll<HTMLElement>(' *'.trim()))];
+
+  liveNodes.forEach((liveNode, index) => {
+    const clonedNode = clonedNodes[index];
+    if (!clonedNode) return;
+
+    const computed = window.getComputedStyle(liveNode);
+    LAYOUT_SNAPSHOT_PROPS.forEach((prop) => {
+      clonedNode.style.setProperty(prop, computed.getPropertyValue(prop));
+    });
+
+    clonedNode.style.setProperty('animation', 'none', 'important');
+    clonedNode.style.setProperty('transition', 'none', 'important');
+
+    if (liveNode instanceof HTMLImageElement && clonedNode instanceof HTMLImageElement) {
+      clonedNode.width = liveNode.width;
+      clonedNode.height = liveNode.height;
+      clonedNode.style.setProperty('object-fit', computed.objectFit || 'cover');
+    }
+
+    if (liveNode instanceof SVGElement && clonedNode instanceof SVGElement) {
+      const width = liveNode.getBoundingClientRect().width;
+      const height = liveNode.getBoundingClientRect().height;
+      if (width) clonedNode.setAttribute('width', `${width}`);
+      if (height) clonedNode.setAttribute('height', `${height}`);
+    }
+
+    if (liveNode instanceof SVGCircleElement && clonedNode instanceof SVGCircleElement) {
+      const dashArray = liveNode.getAttribute('stroke-dasharray') || window.getComputedStyle(liveNode).strokeDasharray;
+      const dashOffset = liveNode.getAttribute('stroke-dashoffset') || window.getComputedStyle(liveNode).strokeDashoffset;
+      if (dashArray && dashArray !== 'none') clonedNode.setAttribute('stroke-dasharray', dashArray);
+      if (dashOffset && dashOffset !== 'none') clonedNode.setAttribute('stroke-dashoffset', dashOffset);
+    }
+  });
+};
+
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -75,26 +177,11 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     }
     await wait(200);
 
-    // Fixed dimensions - ALWAYS same size/quality for every user, every template
-    const A4_WIDTH = 800;   // stabilized desktop width for export
-    const scale = 3;        // 3x = 2400px wide — sharp on all screens
-    const color = safeColor(data?.design?.primaryColor);
-
-    // Save original styles (restored in finally so live UI never stays mutated)
-    const prevWidth = cv.style.width;
-    const prevMaxWidth = cv.style.maxWidth;
-    const prevMinHeight = cv.style.minHeight;
-    const prevOverflow = cv.style.overflow;
-
-    // Force exact width, remove minHeight constraint, enable export-mode CSS
-    cv.classList.add('export-mode');
-    cv.style.width = A4_WIDTH + 'px';
-    cv.style.maxWidth = A4_WIDTH + 'px';
-    cv.style.minHeight = 'auto';
-    cv.style.overflow = 'visible';
-    await wait(300); // wait for reflow
-
+    const captureWidth = Math.round(cv.getBoundingClientRect().width) || 794;
     const contentHeight = cv.scrollHeight;
+    const scale = 3;
+    const color = safeColor(data?.design?.primaryColor);
+    await wait(300); // wait for reflow
 
     try {
       const html2canvas = (await import('html2canvas')).default;
@@ -105,21 +192,22 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        width: A4_WIDTH,
+        width: captureWidth,
         height: contentHeight,
-        windowWidth: A4_WIDTH,
+        windowWidth: captureWidth,
         windowHeight: contentHeight,
         onclone: (clonedDoc: Document) => {
           const clonedEl = clonedDoc.getElementById('cv-output');
           if (clonedEl) {
             clonedEl.classList.add('export-mode');
-            clonedEl.style.width = A4_WIDTH + 'px';
-            clonedEl.style.maxWidth = A4_WIDTH + 'px';
-            clonedEl.style.minWidth = A4_WIDTH + 'px';
+            clonedEl.style.width = captureWidth + 'px';
+            clonedEl.style.maxWidth = captureWidth + 'px';
+            clonedEl.style.minWidth = captureWidth + 'px';
             clonedEl.style.minHeight = 'auto';
             clonedEl.style.height = 'auto';
             clonedEl.style.overflow = 'visible';
             clonedEl.style.transform = 'none';
+            clonedEl.style.background = '#ffffff';
 
             // Kill all animations/transitions
             const killStyle = clonedDoc.createElement('style');
@@ -135,41 +223,11 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
             `;
             clonedDoc.head.appendChild(killStyle);
 
-            // Freeze skill progress bars: copy computed widths from live DOM
-            const liveBars = cv.querySelectorAll<HTMLElement>('[style*="width"]');
-            const cloneBars = clonedEl.querySelectorAll<HTMLElement>('[style*="width"]');
-            liveBars.forEach((live, i) => {
-              const clone = cloneBars[i];
-              if (!clone) return;
-              const w = window.getComputedStyle(live).width;
-              if (w && w !== '0px') {
-                clone.style.width = w;
-              }
-            });
-
-            // Freeze SVG circle stroke offsets from live computed values
-            const liveCircles = cv.querySelectorAll('circle');
-            const cloneCircles = clonedEl.querySelectorAll('circle');
-            liveCircles.forEach((live, i) => {
-              const clone = cloneCircles[i] as SVGCircleElement | undefined;
-              if (!clone) return;
-              const cs = window.getComputedStyle(live);
-              const dash = cs.strokeDasharray;
-              const off = cs.strokeDashoffset;
-              if (dash && dash !== 'none') clone.setAttribute('stroke-dasharray', dash);
-              if (off) clone.setAttribute('stroke-dashoffset', off);
-            });
-
+            freezeExportSnapshot(cv, clonedEl);
             sanitizeGradients(clonedEl, color);
           }
         },
       });
-
-      // Restore styles
-      cv.style.width = prevWidth;
-      cv.style.maxWidth = prevMaxWidth;
-      cv.style.minHeight = prevMinHeight;
-      cv.style.overflow = prevOverflow;
 
       return {
         dataUrl: canvas.toDataURL('image/png', 1.0),
@@ -177,13 +235,6 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         height: canvas.height,
       };
     } finally {
-      // Always restore live UI styles, even if export threw
-      cv.classList.remove('export-mode');
-      cv.style.width = prevWidth;
-      cv.style.maxWidth = prevMaxWidth;
-      cv.style.minHeight = prevMinHeight;
-      cv.style.overflow = prevOverflow;
-
       setHidden(false);
       if (wasHidden && previewParent) {
         previewParent.classList.add('hidden');
