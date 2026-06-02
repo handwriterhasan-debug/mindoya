@@ -506,9 +506,11 @@ const InfographicTemplate = ({ data, color, fontFamily, animated, showPhoto, pho
                   <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                     <circle cx="50" cy="50" r="42" fill="none" stroke="#f0f0f0" strokeWidth="8" />
                     <motion.circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="8" strokeDasharray="264"
+                      strokeDashoffset={264 - (264 * s.level / 100)}
                       initial={animated ? { strokeDashoffset: 264 } : { strokeDashoffset: 264 - (264 * s.level / 100) }}
                       animate={{ strokeDashoffset: 264 - (264 * s.level / 100) }}
                       transition={{ duration: 0.8, delay: 0.3 + i * 0.1 }} strokeLinecap="round" />
+
                   </svg>
                   <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold">{s.level}%</span>
                 </div>
