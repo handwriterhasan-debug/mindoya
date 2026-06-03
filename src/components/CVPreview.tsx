@@ -10,12 +10,19 @@ const getFontFamily = (style: string) => {
   const fonts: Record<string, string> = {
     modern: "'DM Sans', 'Plus Jakarta Sans', system-ui, sans-serif",
     classic: "'Georgia', 'Cambria', 'Times New Roman', serif",
-    mono: "'Courier New', 'Consolas', 'Liberation Mono', monospace",
-    elegant: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif",
-    bold: "'Arial Black', 'Impact', 'Gadget', sans-serif",
-    minimal: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
-    corporate: "'Segoe UI', 'Calibri', 'Tahoma', sans-serif",
+    mono: "'JetBrains Mono', 'Courier New', 'Consolas', monospace",
+    elegant: "'Playfair Display', 'Georgia', 'Palatino Linotype', serif",
+    bold: "'Bebas Neue', 'Arial Black', 'Impact', sans-serif",
+    minimal: "'Inter', 'Helvetica Neue', 'Arial', sans-serif",
+    corporate: "'Montserrat', 'Segoe UI', 'Calibri', sans-serif",
     creative: "'DM Sans', 'Trebuchet MS', 'Gill Sans', sans-serif",
+    // New fonts
+    royal: "'Playfair Display', 'Times New Roman', serif",
+    editorial: "'Merriweather', 'Georgia', serif",
+    futuristic: "'Orbitron', 'Arial', sans-serif",
+    techsharp: "'Space Grotesk', 'Inter', sans-serif",
+    handwritten: "'Caveat', 'Brush Script MT', cursive",
+    literary: "'Lora', 'Georgia', serif",
   };
   return fonts[style] || fonts.modern;
 };
@@ -1054,6 +1061,197 @@ const ModernAITemplate = ({ data, color, fontFamily, animated, showPhoto, photoR
   );
 };
 
+// ======= NEW TEMPLATES =======
+
+const ElegantSerifTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadius }: any) => {
+  const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
+  const Wrap = animated ? motion.div : 'div' as any;
+  const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
+  const serif = fontFamily || "'Playfair Display', 'Georgia', serif";
+  return (
+    <div className="bg-white text-gray-900 p-10" style={{ fontFamily: serif }}>
+      <Wrap {...aProps(0)} className="text-center mb-8">
+        {showPhoto && (
+          <div className="w-24 h-24 mx-auto mb-4 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, border: `2px solid ${color}` }}>
+            <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <h1 className="text-4xl font-bold tracking-tight" style={{ color }}>{p.fullName || 'Your Name'}</h1>
+        {p.jobTitle && <p className="text-sm italic text-gray-500 mt-2">{p.jobTitle}</p>}
+        <div className="mt-3 inline-flex items-center gap-3 mx-auto">
+          <span className="h-px w-10" style={{ backgroundColor: color }} />
+          <span className="text-[10px] uppercase tracking-[0.3em] text-gray-400">Curriculum Vitae</span>
+          <span className="h-px w-10" style={{ backgroundColor: color }} />
+        </div>
+        <div className="flex justify-center flex-wrap gap-x-5 gap-y-1 mt-4 text-[11px] text-gray-500">
+          {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" style={{ color }} />{p.email}</span>}
+          {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" style={{ color }} />{p.phone}</span>}
+          {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color }} />{p.location}</span>}
+        </div>
+        <div className="flex justify-center"><SocialsRow socials={socials} color={color} /></div>
+      </Wrap>
+      {p.summary && <Wrap {...aProps(0.1)} className="mb-7 max-w-[560px] mx-auto text-center"><p className="text-[13px] italic leading-relaxed text-gray-600">"{p.summary}"</p></Wrap>}
+      {experience.length > 0 && <Wrap {...aProps(0.2)} className="mb-6"><SectionTitle icon={Briefcase} title="Experience" color={color} /><TimelineItems items={experience} color={color} animated={animated} type="experience" /></Wrap>}
+      {education.length > 0 && <Wrap {...aProps(0.3)} className="mb-6"><SectionTitle icon={GraduationCap} title="Education" color={color} /><TimelineItems items={education} color={color} animated={animated} type="education" /></Wrap>}
+      <SkillsSection skills={skills} color={color} animated={animated} />
+      <LanguagesSection languages={languages} color={color} animated={animated} />
+      <HobbiesSection hobbies={hobbies} color={color} animated={animated} />
+      <AchievementsSection achievements={achievements} color={color} animated={animated} />
+      <CustomSectionsRender customSections={customSections} color={color} animated={animated} />
+    </div>
+  );
+};
+
+const CompactProTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadius }: any) => {
+  const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
+  const Wrap = animated ? motion.div : 'div' as any;
+  const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
+  return (
+    <div className="bg-white text-gray-900 p-6" style={{ fontFamily }}>
+      <Wrap {...aProps(0)} className="flex items-center gap-4 mb-4 pb-3" style={{ borderBottom: `3px solid ${color}` }}>
+        {showPhoto && (
+          <div className="w-16 h-16 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, border: `2px solid ${color}` }}>
+            <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-extrabold tracking-tight text-gray-900">{p.fullName || 'Your Name'}</h1>
+          {p.jobTitle && <p className="text-xs font-medium" style={{ color }}>{p.jobTitle}</p>}
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[10px] text-gray-500">
+            {p.email && <span className="flex items-center gap-1"><Mail className="w-2.5 h-2.5" style={{ color }} />{p.email}</span>}
+            {p.phone && <span className="flex items-center gap-1"><Phone className="w-2.5 h-2.5" style={{ color }} />{p.phone}</span>}
+            {p.location && <span className="flex items-center gap-1"><MapPin className="w-2.5 h-2.5" style={{ color }} />{p.location}</span>}
+            {p.website && <span className="flex items-center gap-1"><Globe className="w-2.5 h-2.5" style={{ color }} />{p.website}</span>}
+          </div>
+        </div>
+      </Wrap>
+      {p.summary && <Wrap {...aProps(0.08)} className="mb-4"><p className="text-[11px] leading-snug text-gray-600">{p.summary}</p></Wrap>}
+      <div className="grid grid-cols-3 gap-5">
+        <div className="col-span-2 space-y-4">
+          {experience.length > 0 && <Wrap {...aProps(0.15)}><SectionTitle icon={Briefcase} title="Experience" color={color} /><TimelineItems items={experience} color={color} animated={animated} type="experience" /></Wrap>}
+          {education.length > 0 && <Wrap {...aProps(0.25)}><SectionTitle icon={GraduationCap} title="Education" color={color} /><TimelineItems items={education} color={color} animated={animated} type="education" /></Wrap>}
+          <AchievementsSection achievements={achievements} color={color} animated={animated} />
+          <CustomSectionsRender customSections={customSections} color={color} animated={animated} />
+        </div>
+        <div className="col-span-1 space-y-4">
+          <SkillsSection skills={skills} color={color} animated={animated} />
+          <LanguagesSection languages={languages} color={color} animated={animated} />
+          <HobbiesSection hobbies={hobbies} color={color} animated={animated} />
+          {socials.length > 0 && (
+            <div>
+              <SectionTitle icon={Globe} title="Connect" color={color} />
+              <SocialsRow socials={socials} color={color} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const NeonVibrantTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadius }: any) => {
+  const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
+  const Wrap = animated ? motion.div : 'div' as any;
+  const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
+  const bg = '#0a0a14';
+  const panel = '#111122';
+  const textMain = '#e6e6ef';
+  const textMuted = '#8b8ba0';
+  return (
+    <div className="p-8" style={{ fontFamily, backgroundColor: bg, color: textMain }}>
+      <Wrap {...aProps(0)} className="mb-6 p-6 rounded-2xl" style={{ background: `linear-gradient(135deg, ${hexToRgba(color, 0.18)} 0%, ${panel} 100%)`, border: `1px solid ${hexToRgba(color, 0.35)}`, boxShadow: `0 0 32px ${hexToRgba(color, 0.25)}` }}>
+        <div className="flex items-center gap-5">
+          {showPhoto && (
+            <div className="w-24 h-24 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, border: `2px solid ${color}`, boxShadow: `0 0 18px ${hexToRgba(color, 0.55)}` }}>
+              <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-extrabold tracking-tight" style={{ color, textShadow: `0 0 12px ${hexToRgba(color, 0.65)}` }}>{p.fullName || 'Your Name'}</h1>
+            {p.jobTitle && <p className="text-sm mt-1" style={{ color: textMuted }}>{p.jobTitle}</p>}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[11px]" style={{ color: textMuted }}>
+              {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" style={{ color }} />{p.email}</span>}
+              {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" style={{ color }} />{p.phone}</span>}
+              {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color }} />{p.location}</span>}
+            </div>
+            <SocialsRow socials={socials} color={color} />
+          </div>
+        </div>
+      </Wrap>
+      {p.summary && (
+        <Wrap {...aProps(0.1)} className="mb-5 p-4 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-2" style={{ color }}>About</h3>
+          <p className="text-[12px] leading-relaxed" style={{ color: textMain }}>{p.summary}</p>
+        </Wrap>
+      )}
+      {experience.length > 0 && (
+        <Wrap {...aProps(0.2)} className="mb-5 p-5 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color }}>// Experience</h3>
+          {experience.map((exp: any) => (
+            <div key={exp.id} className="mb-3 pl-3" style={{ borderLeft: `2px solid ${color}` }}>
+              <div className="flex justify-between items-baseline"><h4 className="font-bold text-sm" style={{ color: textMain }}>{exp.position}</h4><span className="text-[10px]" style={{ color: textMuted }}>{formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span></div>
+              <p className="text-[11px] font-semibold" style={{ color }}>{exp.company}</p>
+              {exp.description && <p className="text-[11px] mt-1 leading-relaxed" style={{ color: textMuted }}>{exp.description}</p>}
+            </div>
+          ))}
+        </Wrap>
+      )}
+      {education.length > 0 && (
+        <Wrap {...aProps(0.3)} className="mb-5 p-5 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color }}>// Education</h3>
+          {education.map((edu: any) => (
+            <div key={edu.id} className="mb-2"><h4 className="font-bold text-sm" style={{ color: textMain }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</h4><p className="text-[11px]" style={{ color }}>{edu.institution}</p><p className="text-[10px]" style={{ color: textMuted }}>{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</p></div>
+          ))}
+        </Wrap>
+      )}
+      {skills.length > 0 && (
+        <Wrap {...aProps(0.4)} className="mb-5 p-5 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color }}>// Skills</h3>
+          <div className="grid grid-cols-2 gap-x-5 gap-y-2">
+            {skills.map((s: any, i: number) => (
+              <div key={s.id}>
+                <div className="flex justify-between text-[11px] mb-1"><span style={{ color: textMain }}>{s.name}</span><span style={{ color }}>{s.level}%</span></div>
+                <div className="h-1.5 rounded-full" style={{ backgroundColor: hexToRgba(color, 0.12) }}>
+                  <motion.div className="h-full rounded-full" style={{ backgroundColor: color, width: `${s.level}%`, boxShadow: `0 0 8px ${hexToRgba(color, 0.7)}` }}
+                    initial={animated ? { width: 0 } : { width: `${s.level}%` }}
+                    animate={{ width: `${s.level}%` }}
+                    transition={{ duration: 0.8, delay: 0.5 + i * 0.08 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Wrap>
+      )}
+      {languages.length > 0 && (
+        <Wrap {...aProps(0.5)} className="mb-5 p-5 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color }}>// Languages</h3>
+          <div className="flex flex-wrap gap-2">{languages.map((l: any) => (<span key={l.id} className="text-[11px] px-3 py-1 rounded-full" style={{ border: `1px solid ${color}`, color }}>{l.name} · {l.proficiency}</span>))}</div>
+        </Wrap>
+      )}
+      {hobbies.length > 0 && (
+        <Wrap {...aProps(0.6)} className="mb-5 p-5 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color }}>// Interests</h3>
+          <div className="flex flex-wrap gap-1.5">{hobbies.map((h) => (<span key={h} className="text-[10px] px-2.5 py-1 rounded-full" style={{ backgroundColor: hexToRgba(color, 0.12), color }}>{h}</span>))}</div>
+        </Wrap>
+      )}
+      {achievements.length > 0 && (
+        <Wrap {...aProps(0.65)} className="mb-5 p-5 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color }}>// Achievements</h3>
+          {achievements.map((a: any) => (
+            <div key={a.id} className="mb-2"><div className="flex items-center gap-1.5"><Trophy className="w-3 h-3" style={{ color }} /><span className="font-bold text-[12px]" style={{ color: textMain }}>{a.title}</span></div>{a.description && <p className="text-[10px] mt-0.5" style={{ color: textMuted }}>{a.description}</p>}</div>
+          ))}
+        </Wrap>
+      )}
+      {customSections.filter((c: any) => c.title).map((sec: any) => (
+        <Wrap key={sec.id} {...aProps(0.7)} className="mb-5 p-5 rounded-xl" style={{ backgroundColor: panel, border: `1px solid ${hexToRgba(color, 0.18)}` }}>
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color }}>// {sec.title}</h3>
+          <p className="text-[11px] leading-relaxed whitespace-pre-line" style={{ color: textMain }}>{sec.content}</p>
+        </Wrap>
+      ))}
+    </div>
+  );
+};
+
 // ======= MAIN COMPONENT =======
 
 const TEMPLATE_MAP: Record<string, React.ComponentType<any>> = {
@@ -1069,6 +1267,9 @@ const TEMPLATE_MAP: Record<string, React.ComponentType<any>> = {
   gradient: GradientHeaderTemplate,
   scifi: SciFiTemplate,
   modernai: ModernAITemplate,
+  elegantserif: ElegantSerifTemplate,
+  compactpro: CompactProTemplate,
+  neonvibrant: NeonVibrantTemplate,
 };
 
 const CVPreview = () => {
