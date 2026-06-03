@@ -36,6 +36,12 @@ const fontStyles = [
   { name: 'Minimal', value: 'minimal', sample: 'Light & airy' },
   { name: 'Corporate', value: 'corporate', sample: 'Professional look' },
   { name: 'Creative', value: 'creative', sample: 'Unique & fresh' },
+  { name: 'Royal Serif', value: 'royal', sample: 'Luxurious & refined' },
+  { name: 'Editorial', value: 'editorial', sample: 'Magazine quality' },
+  { name: 'Futuristic', value: 'futuristic', sample: 'Sci-fi inspired' },
+  { name: 'Tech Sharp', value: 'techsharp', sample: 'Modern startup' },
+  { name: 'Handwritten', value: 'handwritten', sample: 'Personal touch' },
+  { name: 'Literary', value: 'literary', sample: 'Storyteller feel' },
 ];
 
 const templates = [
@@ -51,6 +57,9 @@ const templates = [
   { name: 'Gradient Header', value: 'gradient', desc: 'Bold gradient top band' },
   { name: 'Sci-Fi Cyber', value: 'scifi', desc: 'Neon glow, dark futuristic' },
   { name: 'Modern AI', value: 'modernai', desc: 'Elegant dark header, clean' },
+  { name: 'Elegant Serif', value: 'elegantserif', desc: 'Refined serif, centered' },
+  { name: 'Compact Pro', value: 'compactpro', desc: 'Dense, recruiter-ready' },
+  { name: 'Neon Vibrant', value: 'neonvibrant', desc: 'Dark with bold neon glow' },
 ];
 
 const photoStyles = [
@@ -69,12 +78,18 @@ const spacingOptions = [
 const fontPreviewStyle: Record<string, React.CSSProperties> = {
   modern: { fontFamily: "'DM Sans', 'Plus Jakarta Sans', sans-serif" },
   classic: { fontFamily: "'Georgia', 'Cambria', serif" },
-  mono: { fontFamily: "'Courier New', 'Consolas', monospace" },
-  elegant: { fontFamily: "'Georgia', 'Palatino', serif", fontStyle: 'italic' },
-  bold: { fontFamily: "'Arial Black', 'Impact', sans-serif", fontWeight: 900 },
-  minimal: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif", fontWeight: 300 },
-  corporate: { fontFamily: "'Segoe UI', 'Calibri', sans-serif" },
+  mono: { fontFamily: "'JetBrains Mono', 'Courier New', monospace" },
+  elegant: { fontFamily: "'Playfair Display', 'Georgia', serif", fontStyle: 'italic' },
+  bold: { fontFamily: "'Bebas Neue', 'Arial Black', sans-serif", fontWeight: 700, letterSpacing: '0.04em' },
+  minimal: { fontFamily: "'Inter', 'Helvetica Neue', sans-serif", fontWeight: 300 },
+  corporate: { fontFamily: "'Montserrat', 'Segoe UI', sans-serif" },
   creative: { fontFamily: "'DM Sans', 'Trebuchet MS', sans-serif" },
+  royal: { fontFamily: "'Playfair Display', serif", fontWeight: 700 },
+  editorial: { fontFamily: "'Merriweather', 'Georgia', serif" },
+  futuristic: { fontFamily: "'Orbitron', sans-serif", letterSpacing: '0.05em' },
+  techsharp: { fontFamily: "'Space Grotesk', 'Inter', sans-serif" },
+  handwritten: { fontFamily: "'Caveat', cursive", fontWeight: 700 },
+  literary: { fontFamily: "'Lora', 'Georgia', serif" },
 };
 
 const DesignStep = () => {
