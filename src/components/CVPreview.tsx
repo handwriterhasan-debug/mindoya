@@ -493,23 +493,23 @@ const InfographicTemplate = ({ data, color, fontFamily, animated, showPhoto, pho
   return (
     <div className="bg-white text-gray-900 p-8" style={{ fontFamily }}>
       <Wrap {...aProps(0)} className="text-center mb-8 pb-6 border-b-2" style={{ borderColor: color }}>
-        {showPhoto && <div className="w-24 h-24 mx-auto mb-3 overflow-hidden" style={{ borderRadius: photoRadius, boxShadow: `0 0 0 4px ${color}` }}><img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover" /></div>}
+        {showPhoto && <div data-export-lock-size className="w-24 h-24 mx-auto mb-3 overflow-hidden shrink-0" style={{ borderRadius: photoRadius, boxShadow: `0 0 0 4px ${color}` }}><img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover block" /></div>}
         <h1 className="text-2xl font-extrabold" style={{ color }}>{p.fullName || 'Your Name'}</h1>
         {p.jobTitle && <p className="text-sm text-gray-500 mt-1">{p.jobTitle}</p>}
-        <div className="flex justify-center flex-wrap gap-4 mt-3 text-[10px] text-gray-500">
-          {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" style={{ color }} />{p.email}</span>}
-          {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" style={{ color }} />{p.phone}</span>}
-          {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color }} />{p.location}</span>}
+        <div data-export-inline-row className="flex justify-center flex-wrap gap-4 mt-3 text-[10px] text-gray-500">
+          {p.email && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1 whitespace-nowrap align-middle leading-[1.2] shrink-0"><Mail className="w-3 h-3 shrink-0" style={{ color }} />{p.email}</span>}
+          {p.phone && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1 whitespace-nowrap align-middle leading-[1.2] shrink-0"><Phone className="w-3 h-3 shrink-0" style={{ color }} />{p.phone}</span>}
+          {p.location && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1 whitespace-nowrap align-middle leading-[1.2] shrink-0"><MapPin className="w-3 h-3 shrink-0" style={{ color }} />{p.location}</span>}
         </div>
       </Wrap>
       {p.summary && <Wrap {...aProps(0.1)} className="mb-6 text-center"><SectionTitle icon={UserCircle} title="About Me" color={color} /><p className="text-xs text-gray-500 leading-relaxed max-w-[450px] mx-auto">{p.summary}</p></Wrap>}
       {skills.length > 0 && (
         <Wrap {...aProps(0.2)} className="mb-6">
           <SectionTitle icon={Zap} title="Skills" color={color} />
-          <div className="flex flex-wrap justify-center gap-5">
+          <div data-export-inline-row className="flex flex-wrap justify-center gap-5">
             {skills.map((s: any, i: number) => (
-              <div key={s.id} className="text-center">
-                <div className="relative w-14 h-14 mx-auto">
+              <div key={s.id} data-export-lock-size className="text-center shrink-0">
+                <div data-export-lock-size className="relative w-14 h-14 mx-auto shrink-0">
                   <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                     <circle cx="50" cy="50" r="42" fill="none" stroke="#f0f0f0" strokeWidth="8" />
                     <motion.circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="8" strokeDasharray="264"
