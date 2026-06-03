@@ -135,6 +135,55 @@ const freezeExportSnapshot = (liveRoot: HTMLElement, clonedRoot: HTMLElement) =>
   });
 };
 
+const lockAlignmentSensitiveNodes = (liveRoot: HTMLElement, clonedRoot: HTMLElement) => {
+  const selectors = [
+    '[data-export-lock-size]',
+    '[data-export-inline-row]',
+    '[data-export-inline-item]',
+  ];
+
+  selectors.forEach((selector) => {
+    const liveNodes = Array.from(liveRoot.querySelectorAll<HTMLElement>(selector));
+    const clonedNodes = Array.from(clonedRoot.querySelectorAll<HTMLElement>(selector));
+
+    liveNodes.forEach((liveNode, index) => {
+      const clonedNode = clonedNodes[index];
+      if (!clonedNode) return;
+
+      const rect = liveNode.getBoundingClientRect();
+      const computed = window.getComputedStyle(liveNode);
+
+      if (rect.width) {
+        clonedNode.style.width = `${rect.width}px`;
+        clonedNode.style.minWidth = `${rect.width}px`;
+        clonedNode.style.maxWidth = `${rect.width}px`;
+      }
+
+      if (rect.height) {
+        clonedNode.style.height = `${rect.height}px`;
+        clonedNode.style.minHeight = `${rect.height}px`;
+      }
+
+      if (liveNode.hasAttribute('data-export-inline-row')) {
+        clonedNode.style.display = 'flex';
+        clonedNode.style.flexWrap = computed.flexWrap;
+        clonedNode.style.alignItems = computed.alignItems;
+        clonedNode.style.justifyContent = computed.justifyContent;
+        clonedNode.style.columnGap = computed.columnGap;
+        clonedNode.style.rowGap = computed.rowGap;
+      }
+
+      if (liveNode.hasAttribute('data-export-inline-item')) {
+        clonedNode.style.display = 'inline-flex';
+        clonedNode.style.alignItems = 'center';
+        clonedNode.style.flexShrink = '0';
+        clonedNode.style.whiteSpace = 'nowrap';
+        clonedNode.style.lineHeight = computed.lineHeight;
+      }
+    });
+  });
+};
+
 const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -224,6 +273,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
             clonedDoc.head.appendChild(killStyle);
 
             freezeExportSnapshot(cv, clonedEl);
+            lockAlignmentSensitiveNodes(cv, clonedEl);
             sanitizeGradients(clonedEl, color);
           }
         },
