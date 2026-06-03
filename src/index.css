@@ -317,6 +317,25 @@ body.printing-cv {
   shape-rendering: geometricPrecision;
 }
 
+#cv-output.export-mode [data-export-inline-row] {
+  align-content: flex-start !important;
+}
+
+#cv-output.export-mode [data-export-inline-item] {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+#cv-output.export-mode [data-export-inline-item] svg,
+#cv-output.export-mode [data-export-inline-item] img,
+#cv-output.export-mode [data-export-lock-size] img {
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
 #cv-output.export-mode .flex > .flex-1 {
   min-width: 0;
 }
