@@ -37,19 +37,19 @@ const formatDate = (date: string) => {
 // ======= SHARED COMPONENTS =======
 
 const ContactRow = ({ p, color }: { p: any; color: string }) => (
-  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-gray-500">
-    {p.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" style={{ color }} />{p.email}</span>}
-    {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" style={{ color }} />{p.phone}</span>}
-    {p.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color }} />{p.location}</span>}
-    {p.website && <span className="flex items-center gap-1"><Globe className="w-3 h-3" style={{ color }} />{p.website}</span>}
+  <div data-export-inline-row className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-gray-500">
+    {p.email && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1 whitespace-nowrap align-middle leading-[1.2] shrink-0"><Mail className="w-3 h-3 shrink-0" style={{ color }} />{p.email}</span>}
+    {p.phone && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1 whitespace-nowrap align-middle leading-[1.2] shrink-0"><Phone className="w-3 h-3 shrink-0" style={{ color }} />{p.phone}</span>}
+    {p.location && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1 whitespace-nowrap align-middle leading-[1.2] shrink-0"><MapPin className="w-3 h-3 shrink-0" style={{ color }} />{p.location}</span>}
+    {p.website && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1 whitespace-nowrap align-middle leading-[1.2] shrink-0"><Globe className="w-3 h-3 shrink-0" style={{ color }} />{p.website}</span>}
   </div>
 );
 
 const SocialsRow = ({ socials, color }: { socials: any[]; color: string }) => (
   socials.length > 0 ? (
-    <div className="flex items-center gap-3 mt-3">
+    <div data-export-inline-row className="flex flex-wrap items-center gap-3 mt-3">
       {socials.filter((s: any) => s.url).map((s: any, i: number) => (
-        <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="transition-opacity hover:opacity-70" style={{ color }} title={s.platform}>
+        <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" data-export-lock-size data-export-inline-item className="inline-flex items-center justify-center shrink-0 transition-opacity hover:opacity-70" style={{ color }} title={s.platform}>
           {getPlatformIcon(s.platform)}
         </a>
       ))}
@@ -59,7 +59,7 @@ const SocialsRow = ({ socials, color }: { socials: any[]; color: string }) => (
 
 const SectionTitle = ({ icon: Icon, title, color }: { icon: any; title: string; color: string }) => (
   <div className="flex items-center gap-2 mb-3 pb-1.5 border-b" style={{ borderColor: hexToRgba(color, 0.125) }}>
-    <Icon className="w-3.5 h-3.5" style={{ color }} />
+    <Icon className="w-3.5 h-3.5 shrink-0" style={{ color }} />
     <h3 className="font-bold text-[11px] uppercase tracking-widest" style={{ color }}>{title}</h3>
   </div>
 );
@@ -84,8 +84,8 @@ const TimelineItems = ({ items, color, animated, type }: { items: any[]; color: 
                 <p className="text-xs font-semibold" style={{ color }}>{item.institution}</p>
               </>
             )}
-            <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
-              <Calendar className="w-2.5 h-2.5" />
+            <p data-export-inline-item className="text-[10px] text-gray-400 inline-flex items-center gap-1 mt-0.5 whitespace-nowrap align-middle leading-[1.2]">
+              <Calendar className="w-2.5 h-2.5 shrink-0" />
               {formatDate(item.startDate)} — {item.current ? 'Present' : formatDate(item.endDate)}
               {type === 'education' && item.gpa && ` · GPA: ${item.gpa}`}
             </p>
@@ -167,9 +167,9 @@ const HobbiesSection = ({ hobbies, color, animated }: { hobbies: string[]; color
   return (
     <Wrap {...aProps(0.6)} className="mb-6">
       <SectionTitle icon={Heart} title="Hobbies & Interests" color={color} />
-      <div className="flex flex-wrap gap-1.5">
+      <div data-export-inline-row className="flex flex-wrap gap-1.5">
         {hobbies.map((h) => (
-          <span key={h} className="px-2.5 py-1 rounded-full text-[10px] font-medium border" style={{ borderColor: hexToRgba(color, 0.145), color }}>{h}</span>
+          <span key={h} data-export-lock-size data-export-inline-item className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-medium border whitespace-nowrap leading-none shrink-0" style={{ borderColor: hexToRgba(color, 0.145), color }}>{h}</span>
         ))}
       </div>
     </Wrap>
@@ -186,8 +186,8 @@ const AchievementsSection = ({ achievements, color, animated }: { achievements: 
       <div className="space-y-2">
         {achievements.map((a: any) => (
           <div key={a.id} className="p-3 rounded-lg border" style={{ borderColor: hexToRgba(color, 0.082), backgroundColor: hexToRgba(color, 0.02) }}>
-            <div className="flex items-center gap-1.5 mb-1">
-              <Trophy className="w-3 h-3" style={{ color }} />
+            <div data-export-inline-item className="inline-flex items-center gap-1.5 mb-1 whitespace-nowrap align-middle leading-[1.2]">
+              <Trophy className="w-3 h-3 shrink-0" style={{ color }} />
               <span className="font-bold text-[11px] text-gray-900">{a.title}</span>
             </div>
             {a.description && <p className="text-[10px] text-gray-500">{a.description}</p>}
