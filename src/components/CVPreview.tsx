@@ -10,12 +10,19 @@ const getFontFamily = (style: string) => {
   const fonts: Record<string, string> = {
     modern: "'DM Sans', 'Plus Jakarta Sans', system-ui, sans-serif",
     classic: "'Georgia', 'Cambria', 'Times New Roman', serif",
-    mono: "'Courier New', 'Consolas', 'Liberation Mono', monospace",
-    elegant: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif",
-    bold: "'Arial Black', 'Impact', 'Gadget', sans-serif",
-    minimal: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
-    corporate: "'Segoe UI', 'Calibri', 'Tahoma', sans-serif",
+    mono: "'JetBrains Mono', 'Courier New', 'Consolas', monospace",
+    elegant: "'Playfair Display', 'Georgia', 'Palatino Linotype', serif",
+    bold: "'Bebas Neue', 'Arial Black', 'Impact', sans-serif",
+    minimal: "'Inter', 'Helvetica Neue', 'Arial', sans-serif",
+    corporate: "'Montserrat', 'Segoe UI', 'Calibri', sans-serif",
     creative: "'DM Sans', 'Trebuchet MS', 'Gill Sans', sans-serif",
+    // New fonts
+    royal: "'Playfair Display', 'Times New Roman', serif",
+    editorial: "'Merriweather', 'Georgia', serif",
+    futuristic: "'Orbitron', 'Arial', sans-serif",
+    techsharp: "'Space Grotesk', 'Inter', sans-serif",
+    handwritten: "'Caveat', 'Brush Script MT', cursive",
+    literary: "'Lora', 'Georgia', serif",
   };
   return fonts[style] || fonts.modern;
 };
