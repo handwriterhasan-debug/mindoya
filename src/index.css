@@ -359,6 +359,21 @@ body.printing-cv {
   flex-shrink: 0 !important;
 }
 
+#cv-output.export-mode [data-export-lock-size],
+#cv-output.export-mode [data-export-lock-size] > *,
+#cv-output.export-mode [data-export-inline-row] > * {
+  box-sizing: border-box;
+}
+
+#cv-output.export-mode .grid,
+#cv-output.export-mode [class*="grid-cols-"] {
+  align-items: start !important;
+}
+
+#cv-output.export-mode .relative > svg {
+  display: block !important;
+}
+
 #cv-output.export-mode .flex > .flex-1 {
   min-width: 0;
 }
