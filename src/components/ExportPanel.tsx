@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const A4_EXPORT_WIDTH = 794;
+const A4_EXPORT_HEIGHT = 1123;
 
 const safeColor = (color: string, fallback = '#6C5CE7'): string => {
   if (!color || typeof color !== 'string') return fallback;
@@ -315,16 +316,45 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     try {
       const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
 
-      // Use dynamic page size matching the canvas exactly — single page, no blank space
-      const pageWidthMm = 210; // A4 width
-      const pageHeightMm = (imgPxH * pageWidthMm) / imgPxW;
-
+      const pageWidthMm = 210;
+      const pageHeightMm = 297;
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: [pageWidthMm, pageHeightMm],
       });
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
+
+      const sourceImage = new Image();
+      sourceImage.src = dataUrl;
+      await new Promise<void>((resolve, reject) => {
+        sourceImage.onload = () => resolve();
+        sourceImage.onerror = () => reject(new Error('Could not prepare the export image.'));
+      });
+
+      const pageSliceHeightPx = Math.round((imgPxW * A4_EXPORT_HEIGHT) / A4_EXPORT_WIDTH);
+      let pageIndex = 0;
+
+      for (let offsetY = 0; offsetY < imgPxH; offsetY += pageSliceHeightPx) {
+        const sliceHeight = Math.min(pageSliceHeightPx, imgPxH - offsetY);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = imgPxW;
+        pageCanvas.height = sliceHeight;
+
+        const ctx = pageCanvas.getContext('2d');
+        if (!ctx) throw new Error('Could not prepare the PDF page.');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(sourceImage, 0, offsetY, imgPxW, sliceHeight, 0, 0, imgPxW, sliceHeight);
+
+        const pageDataUrl = pageCanvas.toDataURL('image/png', 1.0);
+        const renderedHeightMm = (sliceHeight * pageWidthMm) / imgPxW;
+
+        if (pageIndex > 0) pdf.addPage([pageWidthMm, pageHeightMm], 'portrait');
+        pdf.addImage(pageDataUrl, 'PNG', 0, 0, pageWidthMm, Math.min(pageHeightMm, renderedHeightMm), undefined, 'FAST');
+        pageIndex += 1;
+      }
+
       pdf.save('resume.pdf');
       setDone(true);
       toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
