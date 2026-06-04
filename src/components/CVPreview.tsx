@@ -1618,6 +1618,8 @@ const TEMPLATE_MAP: Record<string, React.ComponentType<any>> = {
   elegantserif: ElegantSerifTemplate,
   compactpro: CompactProTemplate,
   neonvibrant: NeonVibrantTemplate,
+  portfoliocard: PortfolioCardTemplate,
+  bluesidebar: BlueSidebarTemplate,
 };
 
 const CVPreview = () => {
