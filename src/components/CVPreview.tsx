@@ -104,14 +104,14 @@ const SkillsSection = ({ skills, color, animated }: { skills: any[]; color: stri
   return (
     <Wrap {...aProps(0.4)} className="mb-6">
       <SectionTitle icon={Zap} title="Skills" color={color} />
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+      <div data-export-lock-size className="grid grid-cols-2 gap-x-6 gap-y-2.5">
         {skills.map((skill: any, i: number) => (
-          <div key={skill.id}>
-            <div className="flex items-center justify-between text-[11px] mb-1">
+          <div key={skill.id} data-export-lock-size>
+            <div data-export-inline-row className="flex items-center justify-between text-[11px] mb-1">
               <span className="font-medium text-gray-900">{skill.name}</span>
               <span className="text-gray-400 text-[10px]">{skill.level}%</span>
             </div>
-            <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+            <div data-export-lock-size className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
               <motion.div className="h-full rounded-full" style={{ backgroundColor: color, width: `${skill.level}%` }}
                 initial={animated ? { width: 0 } : { width: `${skill.level}%` }}
                 animate={{ width: `${skill.level}%` }}
@@ -132,10 +132,10 @@ const LanguagesSection = ({ languages, color, animated }: { languages: any[]; co
   return (
     <Wrap {...aProps(0.5)} className="mb-6">
       <SectionTitle icon={Globe2} title="Languages" color={color} />
-      <div className="flex flex-wrap gap-5">
+      <div data-export-inline-row className="flex flex-wrap gap-5">
         {languages.map((lang: any, i: number) => (
-          <div key={lang.id} className="flex items-center gap-3">
-            <div className="relative w-12 h-12">
+          <div key={lang.id} data-export-lock-size className="flex items-center gap-3 shrink-0">
+            <div data-export-lock-size className="relative w-12 h-12 shrink-0">
               <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="#f0f0f0" strokeWidth="7" />
                 <motion.circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="7"
@@ -1649,7 +1649,7 @@ const CVPreview = () => {
   const TemplateComponent = TEMPLATE_MAP[design.template] || ModernTimeline;
 
   return (
-    <div id="cv-output" className="mx-auto shadow-xl rounded-lg overflow-hidden" style={{ width: '794px' }}>
+    <div id="cv-output" data-cv-page className="cv-page-shell mx-auto shadow-xl rounded-lg overflow-hidden">
       <TemplateComponent
         data={data}
         color={color}
