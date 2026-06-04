@@ -8,6 +8,9 @@ import jsPDF from 'jspdf';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+const A4_EXPORT_WIDTH = 794;
+const A4_EXPORT_HEIGHT = 1123;
+
 const safeColor = (color: string, fallback = '#6C5CE7'): string => {
   if (!color || typeof color !== 'string') return fallback;
   const trimmed = color.trim();
@@ -180,6 +183,19 @@ const lockAlignmentSensitiveNodes = (liveRoot: HTMLElement, clonedRoot: HTMLElem
         clonedNode.style.whiteSpace = 'nowrap';
         clonedNode.style.lineHeight = computed.lineHeight;
       }
+
+      if (computed.display.includes('grid')) {
+        clonedNode.style.display = computed.display;
+        clonedNode.style.gridTemplateColumns = computed.gridTemplateColumns;
+        clonedNode.style.gridTemplateRows = computed.gridTemplateRows;
+        clonedNode.style.columnGap = computed.columnGap;
+        clonedNode.style.rowGap = computed.rowGap;
+      }
+
+      if (computed.display.includes('flex')) {
+        clonedNode.style.display = computed.display;
+        clonedNode.style.flexDirection = computed.flexDirection;
+      }
     });
   });
 };
@@ -226,8 +242,8 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     }
     await wait(200);
 
-    const captureWidth = Math.round(cv.getBoundingClientRect().width) || 794;
-    const contentHeight = cv.scrollHeight;
+    const captureWidth = A4_EXPORT_WIDTH;
+    const contentHeight = Math.max(cv.scrollHeight, cv.offsetHeight, Math.round((A4_EXPORT_WIDTH * 1123) / 794));
     const scale = 3;
     const color = safeColor(data?.design?.primaryColor);
     await wait(300); // wait for reflow
@@ -252,7 +268,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
             clonedEl.style.width = captureWidth + 'px';
             clonedEl.style.maxWidth = captureWidth + 'px';
             clonedEl.style.minWidth = captureWidth + 'px';
-            clonedEl.style.minHeight = 'auto';
+            clonedEl.style.minHeight = `${contentHeight}px`;
             clonedEl.style.height = 'auto';
             clonedEl.style.overflow = 'visible';
             clonedEl.style.transform = 'none';
@@ -300,16 +316,45 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     try {
       const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
 
-      // Use dynamic page size matching the canvas exactly — single page, no blank space
-      const pageWidthMm = 210; // A4 width
-      const pageHeightMm = (imgPxH * pageWidthMm) / imgPxW;
-
+      const pageWidthMm = 210;
+      const pageHeightMm = 297;
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: [pageWidthMm, pageHeightMm],
       });
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
+
+      const sourceImage = new Image();
+      sourceImage.src = dataUrl;
+      await new Promise<void>((resolve, reject) => {
+        sourceImage.onload = () => resolve();
+        sourceImage.onerror = () => reject(new Error('Could not prepare the export image.'));
+      });
+
+      const pageSliceHeightPx = Math.round((imgPxW * A4_EXPORT_HEIGHT) / A4_EXPORT_WIDTH);
+      let pageIndex = 0;
+
+      for (let offsetY = 0; offsetY < imgPxH; offsetY += pageSliceHeightPx) {
+        const sliceHeight = Math.min(pageSliceHeightPx, imgPxH - offsetY);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = imgPxW;
+        pageCanvas.height = sliceHeight;
+
+        const ctx = pageCanvas.getContext('2d');
+        if (!ctx) throw new Error('Could not prepare the PDF page.');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(sourceImage, 0, offsetY, imgPxW, sliceHeight, 0, 0, imgPxW, sliceHeight);
+
+        const pageDataUrl = pageCanvas.toDataURL('image/png', 1.0);
+        const renderedHeightMm = (sliceHeight * pageWidthMm) / imgPxW;
+
+        if (pageIndex > 0) pdf.addPage([pageWidthMm, pageHeightMm], 'portrait');
+        pdf.addImage(pageDataUrl, 'PNG', 0, 0, pageWidthMm, Math.min(pageHeightMm, renderedHeightMm), undefined, 'FAST');
+        pageIndex += 1;
+      }
+
       pdf.save('resume.pdf');
       setDone(true);
       toast({ title: '✅ PDF downloaded!', description: 'resume.pdf saved successfully.' });
@@ -362,9 +407,21 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       setHidden(true);
       await wait(100);
       document.body.classList.add('printing-cv');
+      const cv = document.getElementById('cv-output');
+      if (cv) {
+        cv.style.width = `${A4_EXPORT_WIDTH}px`;
+        cv.style.minWidth = `${A4_EXPORT_WIDTH}px`;
+        cv.style.maxWidth = `${A4_EXPORT_WIDTH}px`;
+      }
       window.print();
       await wait(500);
     } finally {
+      const cv = document.getElementById('cv-output');
+      if (cv) {
+        cv.style.removeProperty('width');
+        cv.style.removeProperty('min-width');
+        cv.style.removeProperty('max-width');
+      }
       document.body.classList.remove('printing-cv');
       setHidden(false);
       if (previousViewMode !== 'static') setViewMode(previousViewMode);
