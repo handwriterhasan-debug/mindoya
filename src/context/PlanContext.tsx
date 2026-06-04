@@ -53,9 +53,9 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
 };
 
 // Pro-locked templates
-export const PRO_TEMPLATES = ['executive', 'creative', 'tech', 'elegantserif', 'compactpro'];
+export const PRO_TEMPLATES = ['executive', 'creative', 'tech', 'elegantserif', 'compactpro', 'portfoliocard'];
 // Premium-only exclusive templates
-export const PREMIUM_TEMPLATES = ['scifi', 'modernai', 'infographic', 'neonvibrant'];
+export const PREMIUM_TEMPLATES = ['scifi', 'modernai', 'infographic', 'neonvibrant', 'bluesidebar'];
 // Free-tier templates
 export const FREE_TEMPLATES = ['modern', 'minimal', 'classic', 'magazine', 'twocolumn', 'gradient'];
 
