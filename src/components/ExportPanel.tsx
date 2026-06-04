@@ -182,6 +182,19 @@ const lockAlignmentSensitiveNodes = (liveRoot: HTMLElement, clonedRoot: HTMLElem
         clonedNode.style.whiteSpace = 'nowrap';
         clonedNode.style.lineHeight = computed.lineHeight;
       }
+
+      if (computed.display.includes('grid')) {
+        clonedNode.style.display = computed.display;
+        clonedNode.style.gridTemplateColumns = computed.gridTemplateColumns;
+        clonedNode.style.gridTemplateRows = computed.gridTemplateRows;
+        clonedNode.style.columnGap = computed.columnGap;
+        clonedNode.style.rowGap = computed.rowGap;
+      }
+
+      if (computed.display.includes('flex')) {
+        clonedNode.style.display = computed.display;
+        clonedNode.style.flexDirection = computed.flexDirection;
+      }
     });
   });
 };
