@@ -1252,6 +1252,354 @@ const NeonVibrantTemplate = ({ data, color, fontFamily, animated, showPhoto, pho
   );
 };
 
+// ======= NEW TEMPLATE: Portfolio Card (rounded cards, premium portfolio style) =======
+const PortfolioCardTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadius }: any) => {
+  const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
+  const Wrap = animated ? motion.div : 'div' as any;
+  const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
+  const bg = '#f5f7fb';
+  const card = '#ffffff';
+  const soft = hexToRgba(color, 0.08);
+  const border = hexToRgba(color, 0.14);
+
+  const Card: React.FC<{ children: React.ReactNode; className?: string; delay?: number }> = ({ children, className = '', delay = 0 }) => (
+    <Wrap {...aProps(delay)} className={`rounded-2xl p-5 ${className}`} style={{ backgroundColor: card, border: `1px solid ${border}`, boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+      {children}
+    </Wrap>
+  );
+
+  const Heading = ({ icon: Icon, title }: { icon: any; title: string }) => (
+    <div data-export-inline-row className="flex items-center gap-2 mb-3">
+      <span data-export-lock-size className="inline-flex items-center justify-center shrink-0 w-6 h-6 rounded-md" style={{ backgroundColor: soft, color }}>
+        <Icon className="w-3.5 h-3.5" />
+      </span>
+      <h3 className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: '#0f172a' }}>{title}</h3>
+    </div>
+  );
+
+  return (
+    <div className="p-5" style={{ fontFamily, backgroundColor: bg, color: '#0f172a' }}>
+      <div className="grid gap-4" style={{ gridTemplateColumns: '34% 1fr' }}>
+        {/* LEFT COLUMN */}
+        <div className="space-y-4">
+          <Card delay={0}>
+            <div className="flex flex-col items-center text-center">
+              {showPhoto ? (
+                <div className="w-32 h-32 overflow-hidden shrink-0 mb-3" style={{ borderRadius: photoRadius, border: `3px solid ${color}`, boxShadow: `0 0 0 4px ${soft}` }}>
+                  <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover block" />
+                </div>
+              ) : null}
+              <div data-export-inline-item className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap leading-none" style={{ backgroundColor: soft, color }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} /> Available for Work
+              </div>
+              {p.jobTitle && <p className="text-[10px] text-gray-500 mt-1.5">{p.jobTitle}</p>}
+            </div>
+          </Card>
+
+          <Card delay={0.1}>
+            <Heading icon={UserCircle} title="Contact" />
+            <div className="space-y-2 text-[11px] text-gray-700">
+              {p.email && <div data-export-inline-item className="inline-flex items-center gap-2 whitespace-nowrap leading-[1.2]"><Mail className="w-3 h-3 shrink-0" style={{ color }} />{p.email}</div>}
+              {p.phone && <div data-export-inline-item className="inline-flex items-center gap-2 whitespace-nowrap leading-[1.2]"><Phone className="w-3 h-3 shrink-0" style={{ color }} />{p.phone}</div>}
+              {p.website && <div data-export-inline-item className="inline-flex items-center gap-2 whitespace-nowrap leading-[1.2]"><Globe className="w-3 h-3 shrink-0" style={{ color }} />{p.website}</div>}
+              {p.location && <div data-export-inline-item className="inline-flex items-center gap-2 whitespace-nowrap leading-[1.2]"><MapPin className="w-3 h-3 shrink-0" style={{ color }} />{p.location}</div>}
+              {socials.filter((s: any) => s.url).map((s: any, i: number) => (
+                <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" data-export-inline-item className="inline-flex items-center gap-2 whitespace-nowrap leading-[1.2] text-gray-700">
+                  <span style={{ color }} className="shrink-0 inline-flex">{getPlatformIcon(s.platform)}</span>
+                  {s.platform}
+                </a>
+              ))}
+            </div>
+          </Card>
+
+          {hobbies.length > 0 && (
+            <Card delay={0.2}>
+              <Heading icon={Heart} title="Expertise" />
+              <div data-export-inline-row className="flex flex-wrap gap-1.5">
+                {hobbies.map((h) => (
+                  <span key={h} data-export-lock-size data-export-inline-item className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium whitespace-nowrap leading-none shrink-0" style={{ backgroundColor: soft, color }}>{h}</span>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {skills.length > 0 && (
+            <Card delay={0.25}>
+              <Heading icon={Cpu} title="Software" />
+              <div className="space-y-2">
+                {skills.map((s: any, i: number) => (
+                  <div key={s.id}>
+                    <div className="flex items-center justify-between text-[11px] mb-1">
+                      <span className="font-medium text-gray-800">{s.name}</span>
+                      <span className="text-gray-400 text-[10px]">{s.level}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full" style={{ backgroundColor: '#eef0f5' }}>
+                      <motion.div className="h-full rounded-full" style={{ backgroundColor: color, width: `${s.level}%` }}
+                        initial={animated ? { width: 0 } : { width: `${s.level}%` }}
+                        animate={{ width: `${s.level}%` }}
+                        transition={{ duration: 0.8, delay: 0.4 + i * 0.08 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {languages.length > 0 && (
+            <Card delay={0.3}>
+              <Heading icon={Globe2} title="Languages" />
+              <div className="space-y-2">
+                {languages.map((l: any) => (
+                  <div key={l.id} className="flex items-center justify-between text-[11px]">
+                    <span className="font-medium text-gray-800">{l.name}</span>
+                    <span className="text-gray-500 text-[10px]">{l.proficiency}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-4">
+          <Card delay={0.05}>
+            <h1 className="text-4xl font-extrabold tracking-tight leading-[1.05]" style={{ color: '#0f172a' }}>
+              {(p.fullName || 'Your Name').split(' ').map((w: string, i: number, arr: string[]) => (
+                <span key={i} style={{ color: i === arr.length - 1 && arr.length > 1 ? color : '#0f172a' }}>{w}{i < arr.length - 1 ? ' ' : ''}</span>
+              ))}
+            </h1>
+            {p.jobTitle && <p className="text-[11px] font-bold uppercase tracking-[0.18em] mt-2" style={{ color }}>{p.jobTitle}</p>}
+            {p.summary && <p className="text-[12px] text-gray-600 leading-relaxed mt-3">{p.summary}</p>}
+            <div data-export-inline-row className="flex flex-wrap gap-2 mt-4">
+              {p.location && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium whitespace-nowrap leading-none border" style={{ borderColor: border, color: '#475569' }}><MapPin className="w-3 h-3" style={{ color }} />{p.location}</span>}
+              {p.website && <span data-export-lock-size data-export-inline-item className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium whitespace-nowrap leading-none border" style={{ borderColor: border, color: '#475569' }}><Globe className="w-3 h-3" style={{ color }} />{p.website}</span>}
+            </div>
+          </Card>
+
+          {experience.length > 0 && (
+            <Card delay={0.15}>
+              <Heading icon={Briefcase} title="Work Experience" />
+              <div className="space-y-4 ml-2 border-l-2 pl-5" style={{ borderColor: soft }}>
+                {experience.map((exp: any) => (
+                  <div key={exp.id} className="relative">
+                    <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2" style={{ borderColor: color, backgroundColor: '#fff' }} />
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h4 className="font-bold text-sm" style={{ color: '#0f172a' }}>{exp.position}</h4>
+                      <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color }}>{formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span>
+                    </div>
+                    <p className="text-[11px] font-semibold mt-0.5" style={{ color }}>{exp.company}</p>
+                    {exp.description && <p className="text-[11px] mt-1.5 text-gray-600 leading-relaxed whitespace-pre-line">{exp.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {education.length > 0 && (
+            <Card delay={0.25}>
+              <Heading icon={GraduationCap} title="Education" />
+              <div className="space-y-3">
+                {education.map((edu: any) => (
+                  <div key={edu.id}>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h4 className="font-bold text-sm">{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</h4>
+                      <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color }}>{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</span>
+                    </div>
+                    <p className="text-[11px] text-gray-600">{edu.institution}</p>
+                    {edu.description && <p className="text-[11px] text-gray-500 mt-1 whitespace-pre-line">{edu.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {achievements.length > 0 && (
+            <Card delay={0.35}>
+              <Heading icon={Trophy} title="Achievements" />
+              <div className="space-y-2">
+                {achievements.map((a: any) => (
+                  <div key={a.id} className="p-3 rounded-lg" style={{ backgroundColor: soft }}>
+                    <div data-export-inline-item className="inline-flex items-center gap-1.5 whitespace-nowrap leading-[1.2]"><Star className="w-3 h-3 shrink-0" style={{ color }} /><span className="font-bold text-[11px]">{a.title}</span></div>
+                    {a.description && <p className="text-[10px] text-gray-600 mt-1">{a.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {customSections.filter((c: any) => c.title).map((sec: any) => (
+            <Card key={sec.id} delay={0.4}>
+              <Heading icon={PenLine} title={sec.title} />
+              <p className="text-[11px] text-gray-600 leading-relaxed whitespace-pre-line">{sec.content}</p>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ======= NEW TEMPLATE: Blue Sidebar (academic / scholarship style) =======
+const BlueSidebarTemplate = ({ data, color, fontFamily, animated, showPhoto, photoRadius }: any) => {
+  const { personal: p, socials, education, experience, skills, languages, hobbies, achievements, customSections } = data;
+  const Wrap = animated ? motion.div : 'div' as any;
+  const aProps = (delay = 0) => animated ? { ...fadeUp, transition: { delay, duration: 0.5 } } : {};
+  const sidebarBg = hexToRgba(color, 0.18);
+
+  const SideHeading = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="text-[13px] font-extrabold tracking-tight mb-2 mt-5 first:mt-0" style={{ color: '#0f172a' }}>
+      {children}:
+    </h3>
+  );
+
+  const Bullet = ({ children }: { children: React.ReactNode }) => (
+    <li data-export-inline-item className="flex items-start gap-2 text-[11px] leading-snug text-gray-800 mb-1">
+      <span className="inline-block w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: '#0f172a' }} />
+      <span>{children}</span>
+    </li>
+  );
+
+  const MainHeading = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="text-[15px] font-extrabold underline decoration-2 underline-offset-4 mb-3 mt-5 first:mt-0" style={{ color: '#0f172a' }}>
+      {children}:
+    </h3>
+  );
+
+  return (
+    <div className="grid" style={{ fontFamily, gridTemplateColumns: '32% 1fr', backgroundColor: '#ffffff', color: '#0f172a' }}>
+      {/* SIDEBAR */}
+      <div className="p-6" style={{ backgroundColor: sidebarBg }}>
+        {showPhoto && (
+          <div className="flex justify-center mb-5">
+            <div className="w-36 h-36 overflow-hidden" style={{ borderRadius: photoRadius, border: '3px solid #0f172a' }}>
+              <img src={p.profileImage} alt={p.fullName} className="w-full h-full object-cover block" />
+            </div>
+          </div>
+        )}
+
+        <SideHeading>Personal Information</SideHeading>
+        <ul className="space-y-0.5">
+          {p.fullName && <Bullet>Name: {p.fullName}</Bullet>}
+          {p.jobTitle && <Bullet>Role: {p.jobTitle}</Bullet>}
+          {p.location && <Bullet>Location: {p.location}</Bullet>}
+          {p.email && <Bullet>Email: {p.email}</Bullet>}
+          {p.website && <Bullet>Portfolio: {p.website}</Bullet>}
+          {p.phone && <Bullet>{p.phone}</Bullet>}
+          {socials.filter((s: any) => s.url).map((s: any, i: number) => (
+            <Bullet key={i}>{s.platform}</Bullet>
+          ))}
+        </ul>
+
+        {skills.length > 0 && (
+          <>
+            <SideHeading>Software</SideHeading>
+            <ul className="space-y-0.5">
+              {skills.map((s: any) => (<Bullet key={s.id}><span className="uppercase tracking-wide">{s.name}</span></Bullet>))}
+            </ul>
+          </>
+        )}
+
+        {hobbies.length > 0 && (
+          <>
+            <SideHeading>Hobbies</SideHeading>
+            <ul className="space-y-0.5">
+              {hobbies.map((h) => (<Bullet key={h}><span className="uppercase tracking-wide">{h}</span></Bullet>))}
+            </ul>
+          </>
+        )}
+
+        {languages.length > 0 && (
+          <>
+            <SideHeading>Language</SideHeading>
+            <ul className="space-y-0.5">
+              {languages.map((l: any) => (<Bullet key={l.id}><span className="uppercase tracking-wide">{l.name}</span></Bullet>))}
+            </ul>
+          </>
+        )}
+
+        {achievements.length > 0 && (
+          <>
+            <SideHeading>Motivation Note</SideHeading>
+            <ul className="space-y-0.5">
+              {achievements.map((a: any) => (<Bullet key={a.id}>{a.title}{a.description ? `. ${a.description}` : ''}</Bullet>))}
+            </ul>
+          </>
+        )}
+      </div>
+
+      {/* MAIN */}
+      <div className="p-7">
+        <Wrap {...aProps(0)} className="mb-2">
+          <h1 className="text-5xl font-extrabold tracking-tight uppercase" style={{ color: '#0f172a' }}>{p.fullName || 'Your Name'}</h1>
+          {p.jobTitle && <p className="text-[12px] mt-2 text-gray-700">{p.jobTitle}</p>}
+        </Wrap>
+
+        {p.summary && (
+          <Wrap {...aProps(0.1)}>
+            <MainHeading>Profile</MainHeading>
+            <ul className="space-y-1.5">
+              <Bullet>{p.summary}</Bullet>
+            </ul>
+          </Wrap>
+        )}
+
+        {experience.length > 0 && (
+          <Wrap {...aProps(0.2)}>
+            <MainHeading>Work Experience</MainHeading>
+            <div className="space-y-4">
+              {experience.map((exp: any) => (
+                <div key={exp.id}>
+                  <h4 className="text-[13px] font-bold">{exp.position}</h4>
+                  <p data-export-inline-item className="text-[11px] text-gray-600 inline-flex items-center gap-2 whitespace-nowrap leading-[1.2]">
+                    <span>{exp.company}</span>
+                    {exp.startDate && <span>· {formatDate(exp.startDate)} — {exp.current ? 'Present' : formatDate(exp.endDate)}</span>}
+                  </p>
+                  {exp.description && (
+                    <ul className="mt-1.5 space-y-0.5">
+                      {exp.description.split('\n').filter(Boolean).map((line: string, i: number) => (
+                        <Bullet key={i}>{line.replace(/^[-•]\s*/, '')}</Bullet>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Wrap>
+        )}
+
+        {education.length > 0 && (
+          <Wrap {...aProps(0.3)}>
+            <MainHeading>Education</MainHeading>
+            <div className="space-y-3">
+              {education.map((edu: any) => (
+                <div key={edu.id}>
+                  <h4 className="text-[13px] font-bold">{edu.institution}</h4>
+                  <p className="text-[11px] text-gray-700">{edu.degree}{edu.field ? ` (${edu.field})` : ''}</p>
+                  <ul className="mt-1 space-y-0.5">
+                    <Bullet>{formatDate(edu.startDate)} — {edu.current ? 'Present' : formatDate(edu.endDate)}</Bullet>
+                    {edu.description && <Bullet>{edu.description}</Bullet>}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </Wrap>
+        )}
+
+        {customSections.filter((c: any) => c.title).map((sec: any) => (
+          <Wrap key={sec.id} {...aProps(0.4)}>
+            <MainHeading>{sec.title}</MainHeading>
+            <ul className="space-y-1.5">
+              {sec.content.split('\n').filter(Boolean).map((line: string, i: number) => (
+                <Bullet key={i}>{line.replace(/^[-•]\s*/, '')}</Bullet>
+              ))}
+            </ul>
+          </Wrap>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ======= MAIN COMPONENT =======
 
 const TEMPLATE_MAP: Record<string, React.ComponentType<any>> = {
@@ -1270,6 +1618,8 @@ const TEMPLATE_MAP: Record<string, React.ComponentType<any>> = {
   elegantserif: ElegantSerifTemplate,
   compactpro: CompactProTemplate,
   neonvibrant: NeonVibrantTemplate,
+  portfoliocard: PortfolioCardTemplate,
+  bluesidebar: BlueSidebarTemplate,
 };
 
 const CVPreview = () => {

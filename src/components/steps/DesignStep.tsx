@@ -60,6 +60,8 @@ const templates = [
   { name: 'Elegant Serif', value: 'elegantserif', desc: 'Refined serif, centered' },
   { name: 'Compact Pro', value: 'compactpro', desc: 'Dense, recruiter-ready' },
   { name: 'Neon Vibrant', value: 'neonvibrant', desc: 'Dark with bold neon glow' },
+  { name: 'Portfolio Card', value: 'portfoliocard', desc: 'Premium card-based portfolio' },
+  { name: 'Blue Sidebar', value: 'bluesidebar', desc: 'Academic sidebar, bullet lists' },
 ];
 
 const photoStyles = [
