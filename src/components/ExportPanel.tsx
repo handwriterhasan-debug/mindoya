@@ -8,6 +8,8 @@ import jsPDF from 'jspdf';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+const A4_EXPORT_WIDTH = 794;
+
 const safeColor = (color: string, fallback = '#6C5CE7'): string => {
   if (!color || typeof color !== 'string') return fallback;
   const trimmed = color.trim();
@@ -226,8 +228,8 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     }
     await wait(200);
 
-    const captureWidth = Math.round(cv.getBoundingClientRect().width) || 794;
-    const contentHeight = cv.scrollHeight;
+    const captureWidth = A4_EXPORT_WIDTH;
+    const contentHeight = Math.max(cv.scrollHeight, cv.offsetHeight, Math.round((A4_EXPORT_WIDTH * 1123) / 794));
     const scale = 3;
     const color = safeColor(data?.design?.primaryColor);
     await wait(300); // wait for reflow
@@ -252,7 +254,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
             clonedEl.style.width = captureWidth + 'px';
             clonedEl.style.maxWidth = captureWidth + 'px';
             clonedEl.style.minWidth = captureWidth + 'px';
-            clonedEl.style.minHeight = 'auto';
+            clonedEl.style.minHeight = `${contentHeight}px`;
             clonedEl.style.height = 'auto';
             clonedEl.style.overflow = 'visible';
             clonedEl.style.transform = 'none';
@@ -362,9 +364,21 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
       setHidden(true);
       await wait(100);
       document.body.classList.add('printing-cv');
+      const cv = document.getElementById('cv-output');
+      if (cv) {
+        cv.style.width = `${A4_EXPORT_WIDTH}px`;
+        cv.style.minWidth = `${A4_EXPORT_WIDTH}px`;
+        cv.style.maxWidth = `${A4_EXPORT_WIDTH}px`;
+      }
       window.print();
       await wait(500);
     } finally {
+      const cv = document.getElementById('cv-output');
+      if (cv) {
+        cv.style.removeProperty('width');
+        cv.style.removeProperty('min-width');
+        cv.style.removeProperty('max-width');
+      }
       document.body.classList.remove('printing-cv');
       setHidden(false);
       if (previousViewMode !== 'static') setViewMode(previousViewMode);
