@@ -1,29 +1,50 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Target, Lock, Loader2, Wand2 } from 'lucide-react';
+import { X, Sparkles, Target, Lock, Loader2, Wand2, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { usePlan } from '@/context/PlanContext';
 import { useCVContext } from '@/context/CVContext';
 import { toast } from '@/hooks/use-toast';
+import { translateCV, SUPPORTED_LANGUAGES } from '@/lib/translateCV';
 
 interface AIToolsPanelProps {
   open: boolean;
   onClose: () => void;
 }
 
-type Tab = 'writer' | 'ats';
+type Tab = 'writer' | 'ats' | 'translate';
 
 const AIToolsPanel = ({ open, onClose }: AIToolsPanelProps) => {
   const { limits, openUpgrade, plan } = usePlan();
-  const { data, updateData } = useCVContext();
+  const { data, updateData, setData } = useCVContext();
   const [tab, setTab] = useState<Tab>('writer');
   const [loading, setLoading] = useState(false);
   const [jobDesc, setJobDesc] = useState('');
   const [atsResult, setAtsResult] = useState<{ score: number; missing: string[]; matched: string[]; tips: string[] } | null>(null);
   const [writerResult, setWriterResult] = useState<string>('');
+  const [targetLang, setTargetLang] = useState<string>('es');
 
   const locked = !limits.aiWriter || !limits.atsScore;
+
+  const runTranslate = async () => {
+    setLoading(true);
+    try {
+      const translated = await translateCV(data, targetLang);
+      setData(translated);
+      const langLabel = SUPPORTED_LANGUAGES.find(l => l.code === targetLang)?.label || targetLang;
+      toast({ title: '🌍 CV translated', description: `Your CV is now in ${langLabel}.` });
+      onClose();
+    } catch (err: any) {
+      toast({
+        title: 'Translation failed',
+        description: err?.message || 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mock AI: produces deterministic-ish suggestions from CV content
   const runWriter = async () => {
