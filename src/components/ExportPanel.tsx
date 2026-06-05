@@ -244,9 +244,9 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
 
     const captureWidth = A4_EXPORT_WIDTH;
     const contentHeight = Math.max(cv.scrollHeight, cv.offsetHeight, Math.round((A4_EXPORT_WIDTH * 1123) / 794));
-    const scale = 3;
+    const scale = 2;
     const color = safeColor(data?.design?.primaryColor);
-    await wait(300); // wait for reflow
+    await wait(150); // wait for reflow
 
     try {
       const html2canvas = (await import('html2canvas')).default;
