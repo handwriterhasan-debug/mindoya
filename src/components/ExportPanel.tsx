@@ -206,7 +206,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
   const [hidden, setHidden] = useState(false);
   const { viewMode, setViewMode, data } = useCVContext();
 
-  const renderCVToPng = useCallback(async (): Promise<{ dataUrl: string; width: number; height: number }> => {
+  const renderCVToCanvas = useCallback(async (): Promise<HTMLCanvasElement> => {
     const previousViewMode = viewMode;
     if (previousViewMode !== 'static') {
       setViewMode('static');
