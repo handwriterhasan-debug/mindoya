@@ -138,18 +138,24 @@ const AIToolsPanel = ({ open, onClose }: AIToolsPanelProps) => {
 
             {/* Tabs */}
             <div className="px-5 pt-3">
-              <div className="grid grid-cols-2 gap-1.5 p-1 bg-secondary/60 rounded-xl">
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-secondary/60 rounded-xl">
                 <button
                   onClick={() => setTab('writer')}
                   className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${tab === 'writer' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
                 >
-                  <Wand2 className="w-3.5 h-3.5" /> AI Writer
+                  <Wand2 className="w-3.5 h-3.5" /> Writer
                 </button>
                 <button
                   onClick={() => setTab('ats')}
                   className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${tab === 'ats' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
                 >
-                  <Target className="w-3.5 h-3.5" /> ATS Score
+                  <Target className="w-3.5 h-3.5" /> ATS
+                </button>
+                <button
+                  onClick={() => setTab('translate')}
+                  className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${tab === 'translate' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  <Languages className="w-3.5 h-3.5" /> Translate
                 </button>
               </div>
             </div>
