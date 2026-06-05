@@ -295,11 +295,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         },
       });
 
-      return {
-        dataUrl: canvas.toDataURL('image/png', 1.0),
-        width: canvas.width,
-        height: canvas.height,
-      };
+      return canvas;
     } finally {
       setHidden(false);
       if (wasHidden && previewParent) {
