@@ -31,7 +31,11 @@ const AIToolsPanel = ({ open, onClose }: AIToolsPanelProps) => {
     setLoading(true);
     try {
       const translated = await translateCV(data, targetLang);
-      setData(translated);
+      // Apply via updateData so each section is pushed to undo history
+      (Object.keys(translated) as (keyof typeof translated)[]).forEach((k) => {
+        if (k === 'design') return;
+        updateData(k as any, (translated as any)[k]);
+      });
       const langLabel = SUPPORTED_LANGUAGES.find(l => l.code === targetLang)?.label || targetLang;
       toast({ title: '🌍 CV translated', description: `Your CV is now in ${langLabel}.` });
       onClose();
