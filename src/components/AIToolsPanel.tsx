@@ -1,29 +1,54 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Target, Lock, Loader2, Wand2 } from 'lucide-react';
+import { X, Sparkles, Target, Lock, Loader2, Wand2, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { usePlan } from '@/context/PlanContext';
 import { useCVContext } from '@/context/CVContext';
 import { toast } from '@/hooks/use-toast';
+import { translateCV, SUPPORTED_LANGUAGES } from '@/lib/translateCV';
 
 interface AIToolsPanelProps {
   open: boolean;
   onClose: () => void;
 }
 
-type Tab = 'writer' | 'ats';
+type Tab = 'writer' | 'ats' | 'translate';
 
 const AIToolsPanel = ({ open, onClose }: AIToolsPanelProps) => {
   const { limits, openUpgrade, plan } = usePlan();
-  const { data, updateData } = useCVContext();
+  const { data, updateData, setData } = useCVContext();
   const [tab, setTab] = useState<Tab>('writer');
   const [loading, setLoading] = useState(false);
   const [jobDesc, setJobDesc] = useState('');
   const [atsResult, setAtsResult] = useState<{ score: number; missing: string[]; matched: string[]; tips: string[] } | null>(null);
   const [writerResult, setWriterResult] = useState<string>('');
+  const [targetLang, setTargetLang] = useState<string>('es');
 
   const locked = !limits.aiWriter || !limits.atsScore;
+
+  const runTranslate = async () => {
+    setLoading(true);
+    try {
+      const translated = await translateCV(data, targetLang);
+      // Apply via updateData so each section is pushed to undo history
+      (Object.keys(translated) as (keyof typeof translated)[]).forEach((k) => {
+        if (k === 'design') return;
+        updateData(k as any, (translated as any)[k]);
+      });
+      const langLabel = SUPPORTED_LANGUAGES.find(l => l.code === targetLang)?.label || targetLang;
+      toast({ title: '🌍 CV translated', description: `Your CV is now in ${langLabel}.` });
+      onClose();
+    } catch (err: any) {
+      toast({
+        title: 'Translation failed',
+        description: err?.message || 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mock AI: produces deterministic-ish suggestions from CV content
   const runWriter = async () => {
@@ -117,18 +142,24 @@ const AIToolsPanel = ({ open, onClose }: AIToolsPanelProps) => {
 
             {/* Tabs */}
             <div className="px-5 pt-3">
-              <div className="grid grid-cols-2 gap-1.5 p-1 bg-secondary/60 rounded-xl">
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-secondary/60 rounded-xl">
                 <button
                   onClick={() => setTab('writer')}
                   className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${tab === 'writer' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
                 >
-                  <Wand2 className="w-3.5 h-3.5" /> AI Writer
+                  <Wand2 className="w-3.5 h-3.5" /> Writer
                 </button>
                 <button
                   onClick={() => setTab('ats')}
                   className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${tab === 'ats' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
                 >
-                  <Target className="w-3.5 h-3.5" /> ATS Score
+                  <Target className="w-3.5 h-3.5" /> ATS
+                </button>
+                <button
+                  onClick={() => setTab('translate')}
+                  className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${tab === 'translate' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  <Languages className="w-3.5 h-3.5" /> Translate
                 </button>
               </div>
             </div>
@@ -171,6 +202,40 @@ const AIToolsPanel = ({ open, onClose }: AIToolsPanelProps) => {
                       </Button>
                     </div>
                   )}
+                </div>
+              ) : tab === 'translate' ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Translate your entire CV into another language. Emails, URLs, dates and tech names are kept untouched.
+                  </p>
+                  <div>
+                    <p className="text-xs font-semibold mb-1.5">Target language</p>
+                    <div className="grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto pr-1">
+                      {SUPPORTED_LANGUAGES.map(l => (
+                        <button
+                          key={l.code}
+                          onClick={() => setTargetLang(l.code)}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium text-left transition-all border ${
+                            targetLang === l.code
+                              ? 'bg-primary/10 border-primary/40 text-foreground'
+                              : 'bg-secondary/40 border-transparent text-muted-foreground hover:bg-secondary'
+                          }`}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Button
+                    onClick={runTranslate}
+                    disabled={loading}
+                    className="w-full h-11 rounded-xl gradient-primary text-primary-foreground"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Languages className="w-4 h-4 mr-1.5" /> Translate my CV</>}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tip: Use Undo (↶) after translating to instantly restore the original.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
