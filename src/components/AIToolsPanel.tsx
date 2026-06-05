@@ -199,6 +199,40 @@ const AIToolsPanel = ({ open, onClose }: AIToolsPanelProps) => {
                     </div>
                   )}
                 </div>
+              ) : tab === 'translate' ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Translate your entire CV into another language. Emails, URLs, dates and tech names are kept untouched.
+                  </p>
+                  <div>
+                    <p className="text-xs font-semibold mb-1.5">Target language</p>
+                    <div className="grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto pr-1">
+                      {SUPPORTED_LANGUAGES.map(l => (
+                        <button
+                          key={l.code}
+                          onClick={() => setTargetLang(l.code)}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium text-left transition-all border ${
+                            targetLang === l.code
+                              ? 'bg-primary/10 border-primary/40 text-foreground'
+                              : 'bg-secondary/40 border-transparent text-muted-foreground hover:bg-secondary'
+                          }`}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Button
+                    onClick={runTranslate}
+                    disabled={loading}
+                    className="w-full h-11 rounded-xl gradient-primary text-primary-foreground"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Languages className="w-4 h-4 mr-1.5" /> Translate my CV</>}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tip: Use Undo (↶) after translating to instantly restore the original.
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
