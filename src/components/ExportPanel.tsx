@@ -310,7 +310,9 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     if (exporting) return;
     setExporting('pdf');
     try {
-      const { dataUrl, width: imgPxW, height: imgPxH } = await renderCVToPng();
+      const canvas = await renderCVToCanvas();
+      const imgPxW = canvas.width;
+      const imgPxH = canvas.height;
 
       const pageWidthMm = 210;
       const pageHeightMm = 297;
@@ -320,35 +322,28 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
         format: [pageWidthMm, pageHeightMm],
       });
 
-      const sourceImage = new Image();
-      sourceImage.src = dataUrl;
-      await new Promise<void>((resolve, reject) => {
-        sourceImage.onload = () => resolve();
-        sourceImage.onerror = () => reject(new Error('Could not prepare the export image.'));
-      });
-
       const pageSliceHeightPx = Math.round((imgPxW * A4_EXPORT_HEIGHT) / A4_EXPORT_WIDTH);
-      let pageIndex = 0;
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = imgPxW;
+      const ctx = pageCanvas.getContext('2d');
+      if (!ctx) throw new Error('Could not prepare the PDF page.');
 
+      let pageIndex = 0;
       for (let offsetY = 0; offsetY < imgPxH; offsetY += pageSliceHeightPx) {
         const sliceHeight = Math.min(pageSliceHeightPx, imgPxH - offsetY);
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = imgPxW;
         pageCanvas.height = sliceHeight;
-
-        const ctx = pageCanvas.getContext('2d');
-        if (!ctx) throw new Error('Could not prepare the PDF page.');
 
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx.drawImage(sourceImage, 0, offsetY, imgPxW, sliceHeight, 0, 0, imgPxW, sliceHeight);
+        ctx.drawImage(canvas, 0, offsetY, imgPxW, sliceHeight, 0, 0, imgPxW, sliceHeight);
 
-        const pageDataUrl = pageCanvas.toDataURL('image/png', 1.0);
+        const pageDataUrl = pageCanvas.toDataURL('image/jpeg', 0.92);
         const renderedHeightMm = (sliceHeight * pageWidthMm) / imgPxW;
 
         if (pageIndex > 0) pdf.addPage([pageWidthMm, pageHeightMm], 'portrait');
-        pdf.addImage(pageDataUrl, 'PNG', 0, 0, pageWidthMm, Math.min(pageHeightMm, renderedHeightMm), undefined, 'FAST');
+        pdf.addImage(pageDataUrl, 'JPEG', 0, 0, pageWidthMm, Math.min(pageHeightMm, renderedHeightMm), undefined, 'FAST');
         pageIndex += 1;
+        await wait(0);
       }
 
       pdf.save('resume.pdf');
@@ -364,13 +359,14 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     } finally {
       setExporting(null);
     }
-  }, [exporting, renderCVToPng]);
+  }, [exporting, renderCVToCanvas]);
 
   const exportPNG = useCallback(async () => {
     if (exporting) return;
     setExporting('png');
     try {
-      const { dataUrl } = await renderCVToPng();
+      const canvas = await renderCVToCanvas();
+      const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = 'resume.png';
       link.href = dataUrl;
@@ -389,7 +385,7 @@ const ExportPanel = ({ onClose }: { onClose: () => void }) => {
     } finally {
       setExporting(null);
     }
-  }, [exporting, renderCVToPng]);
+  }, [exporting, renderCVToCanvas]);
 
   const printResume = useCallback(async () => {
     if (exporting) return;
