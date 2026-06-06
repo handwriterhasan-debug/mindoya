@@ -220,10 +220,32 @@ const Paywall = ({ onBack, reason }: PaywallProps) => {
                 className="h-11 rounded-xl mb-4"
               />
 
+              {/* Disclaimer + policies */}
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 mb-3 flex gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed text-foreground/80">
+                  <strong>3-day refund window.</strong> After 3 days all sales are final. Vorynix is <strong>not responsible</strong> for any outcome related to your CV (job rejections, ATS issues, content errors, etc.) — the tool is provided as-is.
+                </p>
+              </div>
+
+              <label className="flex items-start gap-2.5 p-3 rounded-2xl border border-border bg-secondary/30 mb-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                <Checkbox
+                  checked={agreed}
+                  onCheckedChange={(v) => setAgreed(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-[11px] leading-relaxed">
+                  I have read and agree to the{' '}
+                  <button type="button" onClick={() => setOpenPolicy('terms')} className="text-primary font-semibold underline underline-offset-2 hover:text-primary/80">Terms & Conditions</button>,{' '}
+                  <button type="button" onClick={() => setOpenPolicy('privacy')} className="text-primary font-semibold underline underline-offset-2 hover:text-primary/80">Privacy Policy</button> and{' '}
+                  <button type="button" onClick={() => setOpenPolicy('refund')} className="text-primary font-semibold underline underline-offset-2 hover:text-primary/80">Refund Policy</button>.
+                </span>
+              </label>
+
               <Button
                 onClick={handlePay}
-                disabled={processing}
-                className="w-full h-12 rounded-xl text-base font-bold gradient-primary text-primary-foreground glow-primary-sm"
+                disabled={processing || !agreed}
+                className="w-full h-12 rounded-xl text-base font-bold gradient-primary text-primary-foreground glow-primary-sm disabled:opacity-50"
               >
                 {processing ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying payment…</>
@@ -233,7 +255,7 @@ const Paywall = ({ onBack, reason }: PaywallProps) => {
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center mt-3">
-                Payments are verified manually within minutes. By paying you accept Vorynix' terms.
+                Payments are verified manually within minutes.
               </p>
             </div>
 
