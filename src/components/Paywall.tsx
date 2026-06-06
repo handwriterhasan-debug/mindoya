@@ -282,6 +282,66 @@ const Paywall = ({ onBack, reason }: PaywallProps) => {
         </div>
       </main>
 
+      {/* Footer policy links */}
+      <footer className="px-5 py-4 border-t border-border/40 text-center text-[11px] text-muted-foreground">
+        <button onClick={() => setOpenPolicy('terms')} className="hover:text-foreground underline-offset-2 hover:underline">Terms</button>
+        <span className="mx-2">·</span>
+        <button onClick={() => setOpenPolicy('privacy')} className="hover:text-foreground underline-offset-2 hover:underline">Privacy</button>
+        <span className="mx-2">·</span>
+        <button onClick={() => setOpenPolicy('refund')} className="hover:text-foreground underline-offset-2 hover:underline">Refund Policy</button>
+      </footer>
+
+      {/* Policy modal */}
+      <AnimatePresence>
+        {openPolicy && (() => {
+          const p = POLICIES[openPolicy];
+          const Icon = p.icon;
+          return (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-foreground/40 backdrop-blur-sm sm:p-4"
+              onClick={() => setOpenPolicy(null)}
+            >
+              <motion.div
+                initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+                onClick={e => e.stopPropagation()}
+                className="w-full sm:max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88vh] flex flex-col"
+              >
+                <div className="px-5 py-4 flex items-center justify-between border-b border-border/50">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                    <h2 className="font-heading font-bold text-base">{p.title}</h2>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setOpenPolicy(null)} className="h-9 w-9">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="px-5 py-4 overflow-y-auto flex-1 space-y-3">
+                  {p.body.map((line, i) => (
+                    <p key={i} className="text-xs leading-relaxed text-foreground/80">{line}</p>
+                  ))}
+                  <p className="text-[10px] text-muted-foreground pt-2 border-t border-border/50">
+                    Last updated: June 2026 · Mindoya by Vorynix Studio
+                  </p>
+                </div>
+                <div className="px-5 py-4 border-t border-border/50 flex gap-2">
+                  <Button variant="outline" onClick={() => setOpenPolicy(null)} className="flex-1 h-10 rounded-xl">Close</Button>
+                  <Button
+                    onClick={() => { setAgreed(true); setOpenPolicy(null); toast({ title: '✓ Policies accepted' }); }}
+                    className="flex-1 h-10 rounded-xl gradient-primary text-primary-foreground font-semibold"
+                  >
+                    I accept
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+
       <VorynixBadge />
     </div>
   );
