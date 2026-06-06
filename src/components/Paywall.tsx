@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Check, Sparkles, ShieldCheck, Smartphone, Building2, CreditCard, Ticket, ArrowLeft, Loader2 } from 'lucide-react';
+import { Lock, Check, Sparkles, ShieldCheck, Smartphone, Building2, CreditCard, Ticket, ArrowLeft, Loader2, Wallet, Globe, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAccess } from '@/context/AccessContext';
@@ -15,8 +15,12 @@ interface PaywallProps {
 const METHODS = [
   { id: 'jazzcash', name: 'JazzCash', icon: Smartphone, detail: '0300-1234567', color: 'from-orange-500 to-red-500' },
   { id: 'easypaisa', name: 'EasyPaisa', icon: Smartphone, detail: '0300-7654321', color: 'from-green-500 to-emerald-600' },
+  { id: 'sadapay', name: 'SadaPay', icon: Wallet, detail: '0300-1112233', color: 'from-violet-500 to-purple-600' },
+  { id: 'nayapay', name: 'NayaPay', icon: Wallet, detail: 'username@nayapay', color: 'from-cyan-500 to-blue-600' },
   { id: 'bank', name: 'Bank Transfer', icon: Building2, detail: 'Meezan Bank · 0123-456789', color: 'from-blue-500 to-indigo-600' },
   { id: 'card', name: 'Card / Stripe', icon: CreditCard, detail: 'Visa · Mastercard', color: 'from-purple-500 to-pink-600' },
+  { id: 'paypal', name: 'PayPal', icon: Globe, detail: 'pay@vorynix.com', color: 'from-sky-500 to-blue-700' },
+  { id: 'payoneer', name: 'Payoneer', icon: Send, detail: 'vorynix@payoneer.com', color: 'from-amber-500 to-orange-600' },
 ];
 
 const FEATURES = [
@@ -135,7 +139,7 @@ const Paywall = ({ onBack, reason }: PaywallProps) => {
               <h2 className="font-heading font-bold text-lg mb-1">Choose payment method</h2>
               <p className="text-xs text-muted-foreground mb-4">Send <strong className="text-foreground">210 PKR</strong> to any account below, then enter the transaction ID.</p>
 
-              <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
                 {METHODS.map(m => {
                   const active = selected === m.id;
                   return (
