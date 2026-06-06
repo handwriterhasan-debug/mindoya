@@ -1,44 +1,70 @@
 import { useState, useCallback } from 'react';
 import { CVProvider } from '@/context/CVContext';
 import { PlanProvider, usePlan } from '@/context/PlanContext';
+import { AccessProvider, useAccess } from '@/context/AccessContext';
 import LandingPage from '@/components/LandingPage';
 import CVBuilder from '@/components/CVBuilder';
 import Library from '@/components/Library';
 import PricingModal from '@/components/PricingModal';
-import { CVData, defaultCVData } from '@/types/cv';
+import Paywall from '@/components/Paywall';
+import { CVData } from '@/types/cv';
 
-type View = 'landing' | 'library' | 'builder';
+type View = 'landing' | 'library' | 'builder' | 'paywall';
 
 const InnerApp = () => {
   const [view, setView] = useState<View>('landing');
+  const [pendingView, setPendingView] = useState<View | null>(null);
   const [onboardingData, setOnboardingData] = useState<any>(null);
   const [activeCV, setActiveCV] = useState<{ data: CVData; id: string | null } | null>(null);
   const [pricingOpen, setPricingOpen] = useState(false);
   const { showUpgrade, closeUpgrade } = usePlan();
+  const { unlocked } = useAccess();
+
+  const gate = useCallback((target: View) => {
+    if (!unlocked && (target === 'builder' || target === 'library')) {
+      setPendingView(target);
+      setView('paywall');
+      return false;
+    }
+    return true;
+  }, [unlocked]);
 
   const handleStart = useCallback((data?: any) => {
     setOnboardingData(data);
     setActiveCV(null);
-    setView('builder');
-  }, []);
+    if (gate('builder')) setView('builder');
+  }, [gate]);
 
-  const handleOpenLibrary = useCallback(() => setView('library'), []);
+  const handleOpenLibrary = useCallback(() => {
+    if (gate('library')) setView('library');
+  }, [gate]);
+
   const handleGoLanding = useCallback(() => setView('landing'), []);
 
   const handleNewCVFromLibrary = useCallback(() => {
     setActiveCV(null);
     setOnboardingData(null);
-    setView('builder');
-  }, []);
+    if (gate('builder')) setView('builder');
+  }, [gate]);
 
   const handleOpenCV = useCallback((data: CVData, id: string) => {
     setActiveCV({ data, id });
     setOnboardingData(null);
-    setView('builder');
-  }, []);
+    if (gate('builder')) setView('builder');
+  }, [gate]);
+
+  // When unlocked from paywall, auto-advance to pending view
+  if (view === 'paywall' && unlocked) {
+    const next = pendingView ?? 'builder';
+    setPendingView(null);
+    setView(next);
+  }
 
   return (
     <>
+      {view === 'paywall' && (
+        <Paywall onBack={() => { setView('landing'); setPendingView(null); }} />
+      )}
       {view === 'landing' && (
         <LandingPage
           onStart={handleStart}
@@ -80,7 +106,9 @@ const InnerApp = () => {
 
 const Index = () => (
   <PlanProvider>
-    <InnerApp />
+    <AccessProvider>
+      <InnerApp />
+    </AccessProvider>
   </PlanProvider>
 );
 
