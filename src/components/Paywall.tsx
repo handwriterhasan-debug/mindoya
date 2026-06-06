@@ -1,11 +1,53 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Lock, Check, Sparkles, ShieldCheck, Smartphone, Building2, CreditCard, Ticket, ArrowLeft, Loader2, Wallet, Globe, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Lock, Check, Sparkles, ShieldCheck, Smartphone, Building2, CreditCard, Ticket, ArrowLeft, Loader2, Wallet, Globe, Send, FileText, X, AlertTriangle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAccess } from '@/context/AccessContext';
 import { toast } from '@/hooks/use-toast';
 import VorynixBadge from '@/components/VorynixBadge';
+
+type PolicyKind = 'terms' | 'privacy' | 'refund';
+
+const POLICIES: Record<PolicyKind, { title: string; icon: any; body: string[] }> = {
+  terms: {
+    title: 'Terms & Conditions',
+    icon: FileText,
+    body: [
+      'Mindoya (operated by Vorynix Studio) provides a CV-building tool on a one-time lifetime-access basis for 210 PKR.',
+      'You may use the platform to create and export CVs for personal, non-commercial job-search purposes only.',
+      'All content you enter (work history, education, photos, contact details) belongs to you. You are solely responsible for its accuracy, legality, and any consequences of submitting it to employers.',
+      'You agree not to misuse the platform — including reverse-engineering, mass scraping, reselling, or sharing your unlocked account.',
+      'Vorynix may update templates, features, pricing or these terms at any time. Lifetime access stays valid for the original buyer.',
+      'Violating these terms may result in your access being suspended without refund.',
+    ],
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    icon: ShieldCheck,
+    body: [
+      'Your CV data is stored locally in your browser (localStorage). We do not upload or sell your personal information.',
+      'AI tools (writer, ATS score, translator) send only the necessary text to our AI provider over an encrypted connection. The text is processed for your request and is not stored or used to train models.',
+      'Payment details (transaction ID, method) are used only to verify your purchase and are not shared with third parties.',
+      'Anonymous, aggregated usage analytics may be collected to improve the product. No personal CV content is included.',
+      'You can clear all stored data at any time by clearing your browser storage.',
+      'Questions about your data? Contact support@vorynix.com.',
+    ],
+  },
+  refund: {
+    title: 'Refund Policy',
+    icon: RotateCcw,
+    body: [
+      'We offer a 3-day money-back guarantee. If Mindoya does not work for you, request a refund within 3 days of purchase and we will return the full 210 PKR — no questions asked.',
+      'After 3 days, all sales are final and non-refundable.',
+      'Refunds are processed back to the original payment method within 5–7 business days after approval.',
+      'Coupon-based unlocks are promotional and not eligible for cash refunds.',
+      'IMPORTANT: Vorynix and Mindoya are NOT responsible for any outcomes related to your CV — including but not limited to job rejections, formatting issues at the employer\'s end, ATS misreads, missing interview calls, or data you entered yourself. The tool is provided "as is".',
+      'To request a refund, email support@vorynix.com with your transaction ID and payment method.',
+    ],
+  },
+};
 
 interface PaywallProps {
   onBack?: () => void;
@@ -41,8 +83,14 @@ const Paywall = ({ onBack, reason }: PaywallProps) => {
   const [txnId, setTxnId] = useState('');
   const [processing, setProcessing] = useState(false);
   const [coupon, setCoupon] = useState('');
+  const [agreed, setAgreed] = useState(false);
+  const [openPolicy, setOpenPolicy] = useState<PolicyKind | null>(null);
 
   const handlePay = () => {
+    if (!agreed) {
+      toast({ title: 'Please accept the policies', description: 'Tick the Terms, Privacy & Refund box to continue.', variant: 'destructive' });
+      return;
+    }
     if (!selected) {
       toast({ title: 'Select a payment method', variant: 'destructive' });
       return;
@@ -60,6 +108,10 @@ const Paywall = ({ onBack, reason }: PaywallProps) => {
   };
 
   const handleCoupon = () => {
+    if (!agreed) {
+      toast({ title: 'Please accept the policies first', variant: 'destructive' });
+      return;
+    }
     const n = coupon.trim().toLowerCase();
     if (VALID_COUPONS.includes(n)) {
       unlock('coupon:' + n);
